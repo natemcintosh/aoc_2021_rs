@@ -10,8 +10,7 @@ fn part1(depth_measurements: &[i32]) -> usize {
     // Take the difference of each number and the one before it
     depth_measurements
         .windows(2)
-        .map(|nums| nums[1] - nums[0])
-        .filter(|&delta| delta > 0)
+        .filter(|nums| nums[0] < nums[1])
         .count()
 }
 
@@ -22,12 +21,7 @@ fn part2(depth_measurements: &[i32]) -> usize {
         .map(|nums| nums.iter().sum())
         .collect();
 
-    // Take the differences of the sums of the windows
-    length_3_window_sums
-        .windows(2)
-        .map(|nums| nums[1] - nums[0])
-        .filter(|&delta| delta > 0)
-        .count()
+    part1(&length_3_window_sums)
 }
 
 fn main() {
