@@ -17,7 +17,10 @@ fn part1(depth_measurements: &[i32]) -> usize {
 
 fn part2(depth_measurements: &[i32]) -> usize {
     // Sum up each window of length 3
-    let length_3_window_sums: Vec<i32> =  depth_measurements.windows(3).map(|nums| nums.iter().sum()).collect();
+    let length_3_window_sums: Vec<i32> = depth_measurements
+        .windows(3)
+        .map(|nums| nums.iter().sum())
+        .collect();
 
     // Take the differences of the sums of the windows
     length_3_window_sums
