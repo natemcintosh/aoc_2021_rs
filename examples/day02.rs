@@ -21,7 +21,7 @@ fn parse_input(input_str: &str) -> Vec<(Direction, i64)> {
     input_str
         .lines()
         // Split around the space
-        .map(|line| line.split_whitespace())
+        .map(str::split_whitespace)
         // Convert the first item of each line to a Direction, and the second to a i64
         .map(|mut line_parts| {
             (
@@ -64,7 +64,7 @@ fn part2(instructions: &[(Direction, i64)]) -> i64 {
         match dir {
             Direction::Forward => {
                 depth += aim * value;
-                distance += value
+                distance += value;
             }
             Direction::Up => aim -= value,
             Direction::Down => aim += value,
