@@ -10,3 +10,7 @@ edition = "2021"
 [[example]]
 name = "day01"
 test = true
+
+[[example]]
+name = "day02"
+test = true
