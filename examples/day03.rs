@@ -1,4 +1,4 @@
-use std::{collections::HashSet, hash::Hash};
+use std::collections::HashSet;
 
 fn parse_input(input: &str) -> Vec<Vec<char>> {
     // For each row and column, we store the character at that position.
@@ -88,29 +88,70 @@ fn bit_criteria(input: &[char], is_oxygen: bool) -> char {
     }
 }
 
-fn get_rows<T: Clone>(v: &[Vec<T>], rows: HashSet<usize>) -> Vec<Vec<T>> {
+fn get_rows<T: Clone>(v: &[Vec<T>], rows: &HashSet<usize>) -> Vec<Vec<T>> {
     // Return the rows in the set
     v.iter()
         .enumerate()
-        .filter(|(idx, _)| rows.contains(&idx))
+        .filter(|(idx, _)| rows.contains(idx))
         .map(|(i, _)| v[i].clone())
         .collect()
 }
 
-fn get_cols<T: Clone>(v: &[Vec<T>], cols: HashSet<usize>) -> Vec<Vec<T>> {
-    // Return only the columns of `v` that are in the set `cols`
-    let mut result = vec![Vec::new(); cols.len()];
-    for (row_idx, row) in v.iter().enumerate() {
+fn get_col<T: Copy>(v: &[Vec<T>], wanted_col_idx: usize) -> Vec<T> {
+    // Return only the one column of `v` that is wanted_col_idx
+    let mut result = Vec::new();
+    for row in v.iter() {
         for (col_idx, &item) in row.iter().enumerate() {
-            if cols.contains(&col_idx) {
-                result[row_idx].push(item.clone());
+            if col_idx == wanted_col_idx {
+                result.push(item);
             }
-        }            
-    return result;
+        }
+    }
+    result
 }
 
-fn part2(input: &[Vec<char>]) -> usize {
-    0
+fn get_number_for_sensor(input: &Vec<Vec<char>>, is_oxygen: bool) -> usize {
+    let mut to_alter = input.to_owned();
+    for col_idx in 0..input[0].len() {
+        // Get this column
+        let this_col = get_col(&to_alter, col_idx);
+
+        // What's the one to keep according to bit_criteria?
+        let desired_char = bit_criteria(&this_col, is_oxygen);
+
+        // Gather a HashSet of the row indices desired to keep
+        let rows_to_keep: HashSet<usize> = this_col
+            .iter()
+            .enumerate()
+            .filter(|(_, &val)| val == desired_char)
+            .map(|(idx, _)| idx)
+            .collect();
+
+        // Get the new to_alter
+        to_alter = get_rows(&to_alter, &rows_to_keep);
+
+        // If only one row left, break out
+        if to_alter.len() == 1 {
+            break;
+        }
+    }
+
+    usize::from_str_radix(
+        &to_alter[0]
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect::<String>(),
+        2,
+    )
+    .expect("Could not parse number")
+}
+
+fn part2(input: &Vec<Vec<char>>) -> usize {
+    let oxygen_number = get_number_for_sensor(input, true);
+
+    let co2_number = get_number_for_sensor(input, false);
+
+    oxygen_number * co2_number
 }
 
 fn main() {
@@ -130,8 +171,17 @@ fn main() {
         part1_time.elapsed().as_micros()
     );
 
+    // Part 2
+    let part2_time = std::time::Instant::now();
+    let part2_result = part2(&input);
+    println!(
+        "Part 2 took {:.6} microseconds",
+        part2_time.elapsed().as_micros()
+    );
+
     println!();
     println!("Part 1 result: {}", part1_result);
+    println!("Part 2 result: {}", part2_result);
 }
 
 #[test]
@@ -208,12 +258,12 @@ fn test_get_rows() {
         vec!['1', '0', '1', '1', '1'],
         vec!['1', '0', '0', '0', '0'],
     ];
-    let got = get_rows(&input, rows);
+    let got = get_rows(&input, &rows);
     assert_eq!(got, expected);
 }
 
 #[test]
-fn test_get_cols() {
+fn test_get_col() {
     let input: Vec<Vec<char>> = vec![
         vec!['0', '0', '1', '0', '0'],
         vec!['1', '1', '1', '1', '0'],
@@ -228,25 +278,10 @@ fn test_get_cols() {
         vec!['0', '0', '0', '1', '0'],
         vec!['0', '1', '0', '1', '0'],
     ];
-
-    let cols: HashSet<usize> = vec![0, 2, 4].into_iter().collect();
-
-    let expected: Vec<Vec<char>> = vec![
-        vec!['0', '1', '0'],
-        vec!['1', '1', '0'],
-        vec!['1', '1', '0'],
-        vec!['1', '1', '1'],
-        vec!['1', '1', '1'],
-        vec!['0', '1', '1'],
-        vec!['0', '1', '1'],
-        vec!['1', '1', '0'],
-        vec!['1', '0', '0'],
-        vec!['1', '0', '1'],
-        vec!['0', '0', '0'],
-        vec!['0', '0', '0'],
-    ];
-    let got = get_cols(&input, cols);
-    assert_eq!(got, expected);
+    let wanted_col_idx: usize = 2;
+    let expected: Vec<char> = vec!['1', '1', '1', '1', '1', '1', '1', '1', '0', '0', '0', '0'];
+    let got = get_col(&input, wanted_col_idx);
+    assert_eq!(expected, got)
 }
 
 #[test]
