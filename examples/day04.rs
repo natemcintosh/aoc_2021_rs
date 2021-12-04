@@ -18,10 +18,10 @@ fn parse_input(input: &str) -> (Vec<u16>, Vec<Array2<u16>>) {
             // Split on newlines
             let rows = board.split('\n');
 
-            // The first line is the bingo board
+            // Create an array of zeros
             let mut board = Array2::<u16>::zeros((5, 5));
 
-            // The rest of the lines are the bingo board
+            // Fill the array with the numbers
             for (row_idx, row) in rows.enumerate() {
                 for (col_index, num) in row.split_whitespace().enumerate() {
                     board[(row_idx, col_index)] =
