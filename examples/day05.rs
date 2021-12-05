@@ -6,17 +6,6 @@ struct Point {
     y: i64,
 }
 
-impl std::ops::Add for Point {
-    type Output = Point;
-
-    fn add(self, other: Point) -> Point {
-        Point {
-            x: self.x + other.x,
-            y: self.y + other.y,
-        }
-    }
-}
-
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 struct LineEnds {
     p1: Point,
