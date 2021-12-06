@@ -30,7 +30,7 @@ fn main() {
     let setup_time = std::time::Instant::now();
 
     let input_str = std::fs::read_to_string("input/day06.txt").expect("Failed to read day 6 input");
-    let lines = parse_input(&input_str);
+    let numbers = parse_input(&input_str);
     println!(
         "Setup took {:.6} microseconds",
         setup_time.elapsed().as_micros()
@@ -38,7 +38,7 @@ fn main() {
 
     // Part 1
     let part1_time = std::time::Instant::now();
-    let part1_result = solve(&lines, 80);
+    let part1_result = solve(&numbers, 80);
     println!(
         "Part 1 took {:.6} microseconds",
         part1_time.elapsed().as_micros()
@@ -46,7 +46,7 @@ fn main() {
 
     // Part 2
     let part2_time = std::time::Instant::now();
-    let part2_result = solve(&lines, 256);
+    let part2_result = solve(&numbers, 256);
     println!(
         "Part 2 took {:.6} microseconds",
         part2_time.elapsed().as_micros()
