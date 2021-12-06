@@ -10,7 +10,6 @@ fn parse_input(input: &str) -> [usize; 9] {
         v[n] += 1;
     }
     v
-    // VecDeque::from(v)
 }
 
 fn fish_life(population: &mut [usize; 9]) {
