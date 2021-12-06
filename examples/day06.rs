@@ -1,26 +1,24 @@
-use std::collections::VecDeque;
-
-fn parse_input(input: &str) -> VecDeque<usize> {
+fn parse_input(input: &str) -> [usize; 9] {
     let nums: Vec<usize> = input
         .trim()
         .split(',')
         .map(|n| usize::from_str_radix(n, 10).expect("Could not read number"))
         .collect();
 
-    let mut v: Vec<usize> = vec![0; 9];
+    let mut v: [usize; 9] = [0; 9];
     for n in nums {
         v[n] += 1;
     }
-
-    VecDeque::from(v)
+    v
+    // VecDeque::from(v)
 }
 
-fn fish_life(population: &mut VecDeque<usize>) {
+fn fish_life(population: &mut [usize; 9]) {
     population.rotate_left(1);
     population[6] += population[8];
 }
 
-fn solve(input: &VecDeque<usize>, n_days: usize) -> usize {
+fn solve(input: &[usize; 9], n_days: usize) -> usize {
     let mut population = input.clone();
     for _ in 0..n_days {
         fish_life(&mut population);
@@ -63,14 +61,14 @@ fn main() {
 #[test]
 fn test_parse_input() {
     let input_str = "3,4,3,1,2";
-    let expected: VecDeque<usize> = VecDeque::from([0, 1, 1, 2, 1, 0, 0, 0, 0]);
+    let expected: [usize; 9] = [0, 1, 1, 2, 1, 0, 0, 0, 0];
     let got = parse_input(input_str);
     assert_eq!(expected, got);
 }
 
 #[test]
 fn test_part1() {
-    let input: VecDeque<usize> = VecDeque::from([0, 1, 1, 2, 1, 0, 0, 0, 0]);
+    let input: [usize; 9] = [0, 1, 1, 2, 1, 0, 0, 0, 0];
     let expected_18: usize = 26;
     let expected_80: usize = 5934;
 
@@ -83,7 +81,7 @@ fn test_part1() {
 
 #[test]
 fn test_part2() {
-    let input: VecDeque<usize> = VecDeque::from([0, 1, 1, 2, 1, 0, 0, 0, 0]);
+    let input: [usize; 9] = [0, 1, 1, 2, 1, 0, 0, 0, 0];
     let got = solve(&input, 256);
     assert_eq!(26984457539, got);
 }
