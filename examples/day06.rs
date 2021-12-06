@@ -1,14 +1,10 @@
 fn parse_input(input: &str) -> [usize; 9] {
-    let nums: Vec<usize> = input
+    let mut v: [usize; 9] = [0; 9];
+    input
         .trim()
         .split(',')
-        .map(|n| n.parse::<usize>().expect("Could not read number"))
-        .collect();
+        .for_each(|n| v[n.parse::<usize>().expect("Could not read number")] += 1);
 
-    let mut v: [usize; 9] = [0; 9];
-    for n in nums {
-        v[n] += 1;
-    }
     v
 }
 
@@ -31,26 +27,17 @@ fn main() {
 
     let input_str = std::fs::read_to_string("input/day06.txt").expect("Failed to read day 6 input");
     let numbers = parse_input(&input_str);
-    println!(
-        "Setup took {:.6} µs",
-        setup_time.elapsed().as_micros()
-    );
+    println!("Setup took {:.6} µs", setup_time.elapsed().as_micros());
 
     // Part 1
     let part1_time = std::time::Instant::now();
     let part1_result = solve(&numbers, 80);
-    println!(
-        "Part 1 took {:.6} µs",
-        part1_time.elapsed().as_micros()
-    );
+    println!("Part 1 took {:.6} µs", part1_time.elapsed().as_micros());
 
     // Part 2
     let part2_time = std::time::Instant::now();
     let part2_result = solve(&numbers, 256);
-    println!(
-        "Part 2 took {:.6} µs",
-        part2_time.elapsed().as_micros()
-    );
+    println!("Part 2 took {:.6} µs", part2_time.elapsed().as_micros());
 
     println!();
     println!("Part 1 result: {}", part1_result);
