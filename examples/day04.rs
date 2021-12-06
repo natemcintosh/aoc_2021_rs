@@ -170,26 +170,17 @@ fn main() {
     let input_str = std::fs::read_to_string("input/day04.txt").expect("Failed to read day 4 input");
     let (board_numbers, boards) = parse_input(&input_str);
     let board_views: Vec<ArrayView2<u16>> = boards.iter().map(ndarray::ArrayBase::view).collect();
-    println!(
-        "Setup took {:.6} µs",
-        setup_time.elapsed().as_micros()
-    );
+    println!("Setup took {:.6} µs", setup_time.elapsed().as_micros());
 
     // Part 1
     let part1_time = std::time::Instant::now();
     let part1_result = part1(&board_numbers, &board_views);
-    println!(
-        "Part 1 took {:.6} µs",
-        part1_time.elapsed().as_micros()
-    );
+    println!("Part 1 took {:.6} µs", part1_time.elapsed().as_micros());
 
     // Part 2
     let part2_time = std::time::Instant::now();
     let part2_result = part2(&board_numbers, &board_views);
-    println!(
-        "Part 2 took {:.6} µs",
-        part2_time.elapsed().as_micros()
-    );
+    println!("Part 2 took {:.6} µs", part2_time.elapsed().as_micros());
 
     println!();
     println!("Part 1 result: {}", part1_result);
