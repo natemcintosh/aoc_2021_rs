@@ -2,7 +2,7 @@ fn parse_input(input: &str) -> [usize; 9] {
     let nums: Vec<usize> = input
         .trim()
         .split(',')
-        .map(|n| usize::from_str_radix(n, 10).expect("Could not read number"))
+        .map(|n| n.parse::<usize>().expect("Could not read number"))
         .collect();
 
     let mut v: [usize; 9] = [0; 9];
@@ -18,7 +18,7 @@ fn fish_life(population: &mut [usize; 9]) {
 }
 
 fn solve(input: &[usize; 9], n_days: usize) -> usize {
-    let mut population = input.clone();
+    let mut population = *input;
     for _ in 0..n_days {
         fish_life(&mut population);
     }
