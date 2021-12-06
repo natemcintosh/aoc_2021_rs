@@ -35,7 +35,7 @@ fn main() {
     let input = parse_input(&input_str);
 
     println!(
-        "Setup took {:.6} microseconds",
+        "Setup took {:.6} µs",
         setup_time.elapsed().as_micros()
     );
 
@@ -43,7 +43,7 @@ fn main() {
     let part1_time = std::time::Instant::now();
     let part1_result = part1(&input);
     println!(
-        "Part 1 took {:.6} microseconds",
+        "Part 1 took {:.6} µs",
         part1_time.elapsed().as_micros()
     );
 
@@ -51,7 +51,7 @@ fn main() {
     let part2_time = std::time::Instant::now();
     let part2_result = part2(&input);
     println!(
-        "Part 2 took {:.6} microseconds",
+        "Part 2 took {:.6} µs",
         part2_time.elapsed().as_micros()
     );
 
