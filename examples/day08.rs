@@ -42,14 +42,31 @@ fn part1(input: &[(Vec<&str>, Vec<&str>)]) -> usize {
         .iter()
         // Get just the output part
         .map(|line| line.1.clone())
-        // Count the number of items with either 2, 3, 4, or 7 item
+        // Count the number of items with either 2, 3, 4, or 7 items
+        // Those numbers line up with 1, 7, 4,  and 8 respectively
         .flat_map(|output_items| output_items.iter().map(|&s| s.len()).collect::<Vec<_>>())
         .filter(|pattern_len| [2, 3, 4, 7].contains(pattern_len))
         .count()
 }
 
-fn part2(input: &[(Vec<&str>, Vec<&str>)]) -> usize {
+fn get_output_numers(input: &(Vec<&str>, Vec<&str>)) -> usize {
+    // First get just the input signals
+    let in_signal = &input.0;
+    let out_signal = &input.1;
+
+    // Convert everything to Vec<HashSet<char>> from Vec<&str>
+    
     0
+}
+
+fn part2(input: &[(Vec<&str>, Vec<&str>)]) -> usize {
+    // For each line of the input
+    input
+        .iter()
+        // Get the output numbers
+        .map(|line| get_output_numers(line))
+        // Sum them up
+        .sum()
 }
 
 fn main() {
