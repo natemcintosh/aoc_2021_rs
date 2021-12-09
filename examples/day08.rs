@@ -118,12 +118,12 @@ fn get_output_numers(input: &(Vec<&str>, Vec<&str>)) -> usize {
                 map.insert(idx, '2');
             }
         } else if s.len() == 6 {
-            if one_intersection_size == 2 {
-                map.insert(idx, '9');
-            } else if four_intersection_size == 4 {
-                map.insert(idx, '0');
-            } else {
+            if one_intersection_size == 1 {
                 map.insert(idx, '6');
+            } else if four_intersection_size == 4 {
+                map.insert(idx, '9');
+            } else {
+                map.insert(idx, '0');
             }
         }
     });
@@ -136,15 +136,17 @@ fn get_output_numers(input: &(Vec<&str>, Vec<&str>)) -> usize {
             char_sets
                 .iter()
                 .enumerate()
-                .find(|(_, item)| searching_for.clone() == *item.clone())
+                .find(|(_, item)| searching_for.clone() == (*item).clone())
                 .expect("Could not find a matching char set")
         })
         // Get the char for that index
         .map(|(idx, _)| map.get(&idx).expect("Could not get number from map"))
-        .map(|c| c.clone())
+        .map(|c| *c)
         .collect();
 
-    usize::from_str_radix(&number_as_chars, 10).expect("Could not convert final string to a number")
+    number_as_chars
+        .parse()
+        .expect("Could not convert final string to a number")
 }
 
 fn part2(input: &[(Vec<&str>, Vec<&str>)]) -> usize {
@@ -152,7 +154,7 @@ fn part2(input: &[(Vec<&str>, Vec<&str>)]) -> usize {
     input
         .iter()
         // Get the output numbers
-        .map(|line| get_output_numers(line))
+        .map(get_output_numers)
         // Sum them up
         .sum()
 }
@@ -341,4 +343,12 @@ fn test_part2_11() {
 
     let got = part2(&input);
     assert_eq!(4315, got);
+}
+
+#[test]
+fn test_part2_actual() {
+    let input_str = std::fs::read_to_string("input/day08.txt").expect("Failed to read day 8 input");
+    let input: Vec<(Vec<&str>, Vec<&str>)> = input_str.lines().map(parse_input_line).collect();
+    let got = part2(&input);
+    assert_eq!(983030, got);
 }
