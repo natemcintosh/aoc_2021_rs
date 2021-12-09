@@ -137,6 +137,14 @@ fn test_part1() {
 }
 
 #[test]
+fn test_part1_actual() {
+    let input_str =
+        std::fs::read_to_string("input/day02.txt").expect("Failed to read day 2 input file");
+    let instructions = parse_input(&input_str);
+    assert_eq!(1636725, part1(&instructions));
+}
+
+#[test]
 fn test_part2() {
     let instructions = vec![
         (Direction::Forward, 5),
@@ -149,4 +157,12 @@ fn test_part2() {
     let got = part2(&instructions);
     let expected = 900;
     assert_eq!(expected, got)
+}
+
+#[test]
+fn test_part2_actual() {
+    let input_str =
+        std::fs::read_to_string("input/day02.txt").expect("Failed to read day 2 input file");
+    let instructions = parse_input(&input_str);
+    assert_eq!(1872757425, part2(&instructions));
 }

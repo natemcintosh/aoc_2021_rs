@@ -66,8 +66,28 @@ fn test_part1() {
 }
 
 #[test]
+fn test_part1_actual() {
+    let input_str = std::fs::read_to_string("input/day06.txt").expect("Failed to read day 6 input");
+    let numbers = parse_input(&input_str);
+
+    let got = solve(&numbers, 80);
+
+    assert_eq!(379114, got);
+}
+
+#[test]
 fn test_part2() {
     let input: [usize; 9] = [0, 1, 1, 2, 1, 0, 0, 0, 0];
     let got = solve(&input, 256);
     assert_eq!(26984457539, got);
+}
+
+#[test]
+fn test_part2_actual() {
+    let input_str = std::fs::read_to_string("input/day06.txt").expect("Failed to read day 6 input");
+    let numbers = parse_input(&input_str);
+
+    let got = solve(&numbers, 256);
+
+    assert_eq!(1702631502303, got);
 }

@@ -171,6 +171,15 @@ fn test_part1() {
 }
 
 #[test]
+fn test_part1_actual() {
+    let input_str = std::fs::read_to_string("input/day09.txt").expect("Failed to read day 9 input");
+    let arr = parse_input(&input_str);
+
+    let got = part1(arr.view());
+    assert_eq!(516, got);
+}
+
+#[test]
 fn test_part2() {
     let arr: Array2<u8> = arr2(&[
         [2, 1, 9, 9, 9, 4, 3, 2, 1, 0],
@@ -182,4 +191,13 @@ fn test_part2() {
 
     let got = part2(arr.view());
     assert_eq!(1134, got);
+}
+
+#[test]
+fn test_part2_actual() {
+    let input_str = std::fs::read_to_string("input/day09.txt").expect("Failed to read day 9 input");
+    let arr = parse_input(&input_str);
+
+    let got = part2(arr.view());
+    assert_eq!(1023660, got);
 }

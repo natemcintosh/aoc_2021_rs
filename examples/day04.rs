@@ -346,6 +346,15 @@ fn test_part1() {
 }
 
 #[test]
+fn test_part1_actual() {
+    let input_str = std::fs::read_to_string("input/day04.txt").expect("Failed to read day 4 input");
+    let (board_numbers, boards) = parse_input(&input_str);
+    let board_views: Vec<ArrayView2<u16>> = boards.iter().map(|b| b.view()).collect();
+    let got = part1(&board_numbers, &board_views);
+    assert_eq!(49860, got);
+}
+
+#[test]
 fn test_part2() {
     let numbers_drawn: Vec<u16> = vec![
         7, 4, 9, 5, 11, 17, 23, 2, 0, 14, 21, 24, 10, 16, 13, 6, 15, 25, 12, 22, 18, 20, 8, 19, 3,
@@ -378,4 +387,13 @@ fn test_part2() {
 
     let got = part2(&numbers_drawn, &board_views);
     assert_eq!(got, 1924);
+}
+
+#[test]
+fn test_part2_actual() {
+    let input_str = std::fs::read_to_string("input/day04.txt").expect("Failed to read day 4 input");
+    let (board_numbers, boards) = parse_input(&input_str);
+    let board_views: Vec<ArrayView2<u16>> = boards.iter().map(|b| b.view()).collect();
+    let got = part2(&board_numbers, &board_views);
+    assert_eq!(24628, got);
 }

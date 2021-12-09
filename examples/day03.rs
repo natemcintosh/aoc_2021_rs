@@ -227,6 +227,13 @@ fn test_part1() {
 }
 
 #[test]
+fn test_part1_actual() {
+    let input_str = std::fs::read_to_string("input/day03.txt").expect("Could not read day 3 input");
+    let input = parse_input(&input_str);
+    assert_eq!(3320834, part1(&input));
+}
+
+#[test]
 fn test_get_rows() {
     let input: Vec<Vec<char>> = vec![
         vec!['0', '0', '1', '0', '0'],
@@ -293,4 +300,11 @@ fn test_part2() {
     ];
 
     assert_eq!(part2(&input), 230);
+}
+
+#[test]
+fn test_part2_actual() {
+    let input_str = std::fs::read_to_string("input/day03.txt").expect("Could not read day 3 input");
+    let input = parse_input(&input_str);
+    assert_eq!(4481199, part2(&input));
 }

@@ -78,7 +78,23 @@ fn test_part1() {
 }
 
 #[test]
+fn test_part1_acutal() {
+    let input_str =
+        std::fs::read_to_string("input/day01.txt").expect("Failed to read day 1 input file");
+    let input = parse_input(&input_str);
+    assert_eq!(1564, part1(&input));
+}
+
+#[test]
 fn test_part2() {
     let input: Vec<i32> = vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263];
     assert_eq!(5, part2(&input));
+}
+
+#[test]
+fn test_part2_acutal() {
+    let input_str =
+        std::fs::read_to_string("input/day01.txt").expect("Failed to read day 1 input file");
+    let input = parse_input(&input_str);
+    assert_eq!(1611, part2(&input));
 }

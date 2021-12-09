@@ -419,6 +419,15 @@ fn test_part1() {
 }
 
 #[test]
+fn test_part1_acutal() {
+    let input_str = std::fs::read_to_string("input/day05.txt").expect("Failed to read day 5 input");
+    let lines = parse_input(&input_str);
+
+    let got = part1(&lines);
+    assert_eq!(5774, got);
+}
+
+#[test]
 fn test_part2() {
     let input: Vec<LineEnds> = vec![
         LineEnds {
@@ -465,4 +474,13 @@ fn test_part2() {
     let expected = 12;
     let got = part2(&input);
     assert_eq!(expected, got);
+}
+
+#[test]
+fn test_part2_acutal() {
+    let input_str = std::fs::read_to_string("input/day05.txt").expect("Failed to read day 5 input");
+    let lines = parse_input(&input_str);
+
+    let got = part2(&lines);
+    assert_eq!(18423, got);
 }

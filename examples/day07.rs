@@ -97,6 +97,14 @@ fn test_part1() {
 }
 
 #[test]
+fn test_part1_actual() {
+    let input_str = std::fs::read_to_string("input/day07.txt").expect("Failed to read day 7 input");
+    let numbers = parse_input(&input_str);
+    let got = part1(&numbers);
+    assert_eq!(336701, got);
+}
+
+#[test]
 fn test_sum_to_n1() {
     let got = sum_to_n(4);
     assert_eq!(10, got);
@@ -127,4 +135,12 @@ fn test_part2() {
     let nums: Vec<usize> = vec![0, 1, 1, 2, 2, 2, 4, 7, 14, 16];
     let got = part2(&nums);
     assert_eq!(168, got);
+}
+
+#[test]
+fn test_part2_actual() {
+    let input_str = std::fs::read_to_string("input/day07.txt").expect("Failed to read day 7 input");
+    let numbers = parse_input(&input_str);
+    let got = part2(&numbers);
+    assert_eq!(95167302, got);
 }

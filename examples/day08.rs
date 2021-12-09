@@ -217,6 +217,15 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
 }
 
 #[test]
+fn test_part1_acutal() {
+    let input_str = std::fs::read_to_string("input/day08.txt").expect("Failed to read day 8 input");
+    let numbers: Vec<(Vec<&str>, Vec<&str>)> = input_str.lines().map(parse_input_line).collect();
+
+    let got = part1(&numbers);
+    assert_eq!(355, got);
+}
+
+#[test]
 fn test_part2_1() {
     let input_str =
         "acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf";
