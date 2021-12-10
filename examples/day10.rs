@@ -51,7 +51,7 @@ fn part1(input: &[ParseResult]) -> usize {
             ParseResult::Corrupted(c) => Some(c),
             _ => None,
         })
-        .map(|c| *c)
+        .copied()
         .collect();
 
     corrupted_characters
@@ -74,7 +74,7 @@ fn part2(input: &[ParseResult]) -> usize {
             ParseResult::Incomplete(v) => Some(v),
             _ => None,
         })
-        .map(|v| v.clone())
+        .cloned()
         .collect();
 
     // Score the completion strings
