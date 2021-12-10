@@ -12,7 +12,7 @@ fn parse_line(s: &str) -> ParseResult {
     const OPENERS: [char; 4] = ['(', '[', '{', '<'];
     const CLOSERS: [char; 4] = [')', ']', '}', '>'];
 
-    let mut stack: Vec<char> = Vec::new();
+    let mut stack: Vec<char> = Vec::with_capacity(20);
 
     // Iterate over all the inputs
     for c in s.trim().chars() {
