@@ -104,7 +104,7 @@ fn main() {
     // Part 1
     let part1_time = std::time::Instant::now();
     let part1_result = part1(&input);
-    println!("Part 1 took {:.6} µs", part1_time.elapsed().as_micros());
+    println!("Part 1 took {:.6} ns", part1_time.elapsed().as_nanos());
 
     // Part 2
     let part2_time = std::time::Instant::now();
