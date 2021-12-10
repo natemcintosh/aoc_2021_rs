@@ -46,14 +46,14 @@ fn parse_line(s: &str) -> ParseResult {
     ParseResult::Incomplete(stack)
 }
 
-fn part1(input: &str) -> usize {
+fn part1(input: &[ParseResult]) -> usize {
     let corrupted_characters: Vec<char> = input
-        .lines()
-        .map(parse_line)
+        .iter()
         .filter_map(|r| match r {
             ParseResult::Corrupted(c) => Some(c),
             _ => None,
         })
+        .map(|c| *c)
         .collect();
 
     let score: HashMap<char, usize> =
@@ -65,15 +65,15 @@ fn part1(input: &str) -> usize {
         .sum()
 }
 
-fn part2(input: &str) -> usize {
+fn part2(input: &[ParseResult]) -> usize {
     // Get just the incomplete lines
     let to_complete: Vec<Vec<char>> = input
-        .lines()
-        .map(parse_line)
+        .iter()
         .filter_map(|r| match r {
             ParseResult::Incomplete(v) => Some(v),
             _ => None,
         })
+        .map(|v| v.clone())
         .collect();
 
     // Score the completion strings
@@ -105,7 +105,9 @@ fn part2(input: &str) -> usize {
 fn main() {
     let setup_time = std::time::Instant::now();
 
-    let input = std::fs::read_to_string("input/day10.txt").expect("Failed to read day 10 input");
+    let input_str =
+        std::fs::read_to_string("input/day10.txt").expect("Failed to read day 10 input");
+    let input: Vec<ParseResult> = input_str.lines().map(parse_line).collect();
     println!("Setup took {:.6} µs", setup_time.elapsed().as_micros());
 
     // Part 1
@@ -202,7 +204,7 @@ fn test_incomplete_4() {
 
 #[test]
 fn test_part1() {
-    let input = "[({(<(())[]>[[{[]{<()<>>
+    let input_str = "[({(<(())[]>[[{[]{<()<>>
 [(()[<>])]({[<{<<[]>>(
 {([(<{}[<>[]}>{[]{[(<()>
 (((({<>}<{<{<>}{[]{[]{}
@@ -212,13 +214,16 @@ fn test_part1() {
 [<(<(<(<{}))><([]([]()
 <{([([[(<>()){}]>(<<{{
 <{([{{}}[<[[[<>{}]]]>[]]";
-    let got = part1(input);
+    let input: Vec<ParseResult> = input_str.lines().map(parse_line).collect();
+    let got = part1(&input);
     assert_eq!(26397, got);
 }
 
 #[test]
 fn test_part1_actual() {
-    let input = std::fs::read_to_string("input/day10.txt").expect("Failed to read day 10 input");
+    let input_str =
+        std::fs::read_to_string("input/day10.txt").expect("Failed to read day 10 input");
+    let input: Vec<ParseResult> = input_str.lines().map(parse_line).collect();
     let got = part1(&input);
     assert_eq!(319329, got);
 }
@@ -265,7 +270,7 @@ fn test_incomplete_stack_5() {
 
 #[test]
 fn test_part2() {
-    let input = "[({(<(())[]>[[{[]{<()<>>
+    let input_str = "[({(<(())[]>[[{[]{<()<>>
         [(()[<>])]({[<{<<[]>>(
         {([(<{}[<>[]}>{[]{[(<()>
         (((({<>}<{<{<>}{[]{[]{}
@@ -275,6 +280,16 @@ fn test_part2() {
         [<(<(<(<{}))><([]([]()
         <{([([[(<>()){}]>(<<{{
         <{([{{}}[<[[[<>{}]]]>[]]";
-    let got = part2(input);
+    let input: Vec<ParseResult> = input_str.lines().map(parse_line).collect();
+    let got = part2(&input);
     assert_eq!(288957, got);
+}
+
+#[test]
+fn test_part2_actual() {
+    let input_str =
+        std::fs::read_to_string("input/day10.txt").expect("Failed to read day 10 input");
+    let input: Vec<ParseResult> = input_str.lines().map(parse_line).collect();
+    let got = part2(&input);
+    assert_eq!(3515583998, got);
 }
