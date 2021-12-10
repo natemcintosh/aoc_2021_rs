@@ -32,7 +32,6 @@ fn parse_line(s: &str) -> ParseResult {
                 return ParseResult::Corrupted(c);
             }
         } else {
-            dbg!(c);
             panic!("Got {} which is not an opener or closer", c);
         }
     }
@@ -45,17 +44,14 @@ fn parse_line(s: &str) -> ParseResult {
 }
 
 fn part1(input: &[ParseResult]) -> usize {
-    let corrupted_characters: Vec<char> = input
+    input
         .iter()
+        // Get only the corrupted input characters
         .filter_map(|r| match r {
             ParseResult::Corrupted(c) => Some(c),
             _ => None,
         })
-        .copied()
-        .collect();
-
-    corrupted_characters
-        .iter()
+        // Get the score for each character
         .map(|c| match c {
             ')' => 3,
             ']' => 57,
@@ -67,19 +63,13 @@ fn part1(input: &[ParseResult]) -> usize {
 }
 
 fn part2(input: &[ParseResult]) -> usize {
-    // Get just the incomplete lines
-    let to_complete: Vec<Vec<char>> = input
+    let mut completion_scores: Vec<usize> = input
+        // Get just the incomplete lines
         .iter()
         .filter_map(|r| match r {
             ParseResult::Incomplete(v) => Some(v),
             _ => None,
         })
-        .cloned()
-        .collect();
-
-    // Score the completion strings
-    let mut completion_scores: Vec<usize> = to_complete
-        .iter()
         // For each set of characters, calculate the score
         .map(|v| {
             v.iter().fold(0_usize, |acc, c| {
