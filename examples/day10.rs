@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 #[derive(Debug, PartialEq)]
 enum ParseResult<'a> {
     Corrupted(char),
@@ -56,12 +54,15 @@ fn part1(input: &[ParseResult]) -> usize {
         .map(|c| *c)
         .collect();
 
-    let score: HashMap<char, usize> =
-        HashMap::from([(')', 3), (']', 57), ('}', 1197), ('>', 25137)]);
-
     corrupted_characters
         .iter()
-        .map(|c| score.get(c).expect("Could not find character in score"))
+        .map(|c| match c {
+            ')' => 3,
+            ']' => 57,
+            '}' => 1197,
+            '>' => 25137,
+            _ => unreachable!(),
+        })
         .sum()
 }
 
