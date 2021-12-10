@@ -6,33 +6,21 @@ enum ParseResult<'a> {
 }
 
 fn parse_line(s: &str) -> ParseResult {
-    // An array of opening chars
-    const OPENERS: [char; 4] = ['(', '[', '{', '<'];
-    const CLOSERS: [char; 4] = [')', ']', '}', '>'];
-
     let mut stack: Vec<char> = Vec::with_capacity(20);
 
     // Iterate over all the inputs
     for c in s.trim().chars() {
-        // For each opening bracket, push it's opposite onto the stack
-        if OPENERS.contains(&c) {
-            match c {
-                '(' => stack.push(')'),
-                '[' => stack.push(']'),
-                '{' => stack.push('}'),
-                '<' => stack.push('>'),
-                _ => unreachable!(),
-            }
-        } else if CLOSERS.contains(&c) {
-            // `c` needs to match the top of the stack, otherwise it is Corrupt
-            let required_closer = stack.last().expect("A closer with no matching opener");
-            if c == *required_closer {
-                stack.pop();
-            } else {
-                return ParseResult::Corrupted(c);
-            }
-        } else {
-            panic!("Got {} which is not an opener or closer", c);
+        match c {
+            '(' => stack.push(')'),
+            '[' => stack.push(']'),
+            '{' => stack.push('}'),
+            '<' => stack.push('>'),
+            ')' if stack.pop().unwrap() != ')' => return ParseResult::Corrupted(')'),
+            ']' if stack.pop().unwrap() != ']' => return ParseResult::Corrupted(']'),
+            '}' if stack.pop().unwrap() != '}' => return ParseResult::Corrupted('}'),
+            '>' if stack.pop().unwrap() != '>' => return ParseResult::Corrupted('>'),
+            // This represents a good closing bracket
+            _ => (),
         }
     }
     if stack.is_empty() {
@@ -72,15 +60,12 @@ fn part2(input: &[ParseResult]) -> usize {
         })
         // For each set of characters, calculate the score
         .map(|v| {
-            v.iter().fold(0_usize, |acc, c| {
-                (acc * 5)
-                    + match c {
-                        ')' => 1,
-                        ']' => 2,
-                        '}' => 3,
-                        '>' => 4,
-                        _ => unreachable!(),
-                    }
+            v.iter().fold(0_usize, |acc, c| match c {
+                ')' => 1 + (acc * 5),
+                ']' => 2 + (acc * 5),
+                '}' => 3 + (acc * 5),
+                '>' => 4 + (acc * 5),
+                _ => unreachable!(),
             })
         })
         .collect();
