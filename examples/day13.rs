@@ -37,7 +37,7 @@ fn parse_input(input: &str) -> (Array2<bool>, Vec<Fold>) {
         .iter()
         .map(|(_, col)| col)
         .max()
-        .expect("Could not find a maximum col")
+        .expect("Could not find a minimum col")
         + 1;
 
     // Create an array of all false
