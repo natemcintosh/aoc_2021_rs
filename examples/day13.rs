@@ -422,3 +422,12 @@ fn test_part1() {
     let got = part1(arr.view(), &fold);
     assert_eq!(17, got);
 }
+
+#[test]
+fn test_part1_actual() {
+    let input_str =
+        std::fs::read_to_string("input/day13.txt").expect("Failed to read day 13 input");
+    let (arr, folds) = parse_input(&input_str);
+    let got = part1(arr.view(), &folds[0]);
+    assert_eq!(661, got);
+}
