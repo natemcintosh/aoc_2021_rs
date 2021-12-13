@@ -27,7 +27,20 @@ fn get_neighbors(nrows: i32, ncols: i32, row_idx: i32, col_idx: i32) -> Vec<(usi
 }
 
 fn main() {
-    println!("Hello, world!");
+    let neighbors_arr: Array2<Vec<(usize, usize)>> = Array2::from_shape_vec(
+        (10, 10),
+        (0..10)
+            .into_iter()
+            .flat_map(|row_idx| {
+                (0..10)
+                    .into_iter()
+                    .map(move |col_idx| get_neighbors(10, 10, row_idx, col_idx))
+            })
+            .collect(),
+    )
+    .expect("Could not create neighbors array");
+
+    dbg!(&neighbors_arr);
 }
 
 #[test]
