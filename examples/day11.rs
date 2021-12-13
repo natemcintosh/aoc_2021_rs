@@ -1,4 +1,4 @@
-use ndarray::{arr2, Array, Array2, ArrayBase, Dim, OwnedRepr};
+use ndarray::{arr2, Array2, ArrayViewMut2, ArrayView2};
 
 fn parse_input(input: &str) -> Array2<u8> {
     let mut result = Array2::zeros((10, 10));
@@ -25,6 +25,15 @@ fn get_neighbors(nrows: i32, ncols: i32, row_idx: i32, col_idx: i32) -> Vec<(usi
         .map(|(r, c)| (r as usize, c as usize))
         .collect()
 }
+
+// fn part1(arr: ArrayView2<u8>, n_steps: usize) -> usize {
+//     let mut arr = arr.to_owned();
+
+//     for _ in 0..n_steps {
+//         time_step(arr);
+//     }
+
+// }
 
 fn main() {
     let neighbors_arr: Array2<Vec<(usize, usize)>> = Array2::from_shape_vec(
@@ -72,3 +81,22 @@ fn test_parse_input() {
 
     assert_eq!(expected, got);
 }
+
+// #[test]
+// fn test_part1() {
+//     let mut arr = arr2(&[
+//         [5, 4, 8, 3, 1, 4, 3, 2, 2, 3],
+//         [2, 7, 4, 5, 8, 5, 4, 7, 1, 1],
+//         [5, 2, 6, 4, 5, 5, 6, 1, 7, 3],
+//         [6, 1, 4, 1, 3, 3, 6, 1, 4, 6],
+//         [6, 3, 5, 7, 3, 8, 5, 4, 7, 8],
+//         [4, 1, 6, 7, 5, 2, 4, 6, 4, 5],
+//         [2, 1, 7, 6, 8, 4, 1, 7, 2, 1],
+//         [6, 8, 8, 2, 8, 8, 1, 1, 3, 4],
+//         [4, 8, 4, 6, 8, 4, 8, 5, 5, 4],
+//         [5, 2, 8, 3, 7, 5, 1, 5, 2, 6],
+//     ]);
+
+//     let got = part1(&mut arr, 100);
+
+// }
