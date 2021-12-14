@@ -124,6 +124,22 @@ fn part1(
     counter
 }
 
+fn part2(arr: ArrayView2<Octopus>, neighbors_array: ArrayView2<Vec<(usize, usize)>>) -> usize {
+    let mut arr = arr.to_owned();
+    const NOCTOPI: usize = 100;
+    for iter in 1.. {
+        let counter = time_step(&mut arr.view_mut(), neighbors_array);
+        if counter == NOCTOPI {
+            return iter;
+        } else if iter > 10_000 {
+            return 0;
+        }
+    }
+
+    // Have to put this otherwise compiler freaks out
+    0
+}
+
 fn main() {
     let setup_time = std::time::Instant::now();
 
@@ -153,13 +169,13 @@ fn main() {
     println!("Part 1 took {:.6} µs", part1_time.elapsed().as_micros());
 
     // Part 2
-    // let part2_time = std::time::Instant::now();
-    // let part2_result = part2(&input);
-    // println!("Part 2 took {:.6} µs", part2_time.elapsed().as_micros());
+    let part2_time = std::time::Instant::now();
+    let part2_result = part2(input.view(), neighbors_arr.view());
+    println!("Part 2 took {:.6} µs", part2_time.elapsed().as_micros());
 
     println!();
     println!("Part 1 result: {}", part1_result);
-    // println!("Part 2 result: {}", part2_result);
+    println!("Part 2 result: {}", part2_result);
 }
 
 #[test]
@@ -221,8 +237,8 @@ fn test_part1_1() {
     )
     .expect("Could not create neighbors array");
 
-    let got10 = part1(arr.view(), 2, neighbors_arr.view());
-    assert_eq!(35, got10);
+    let got = part1(arr.view(), 2, neighbors_arr.view());
+    assert_eq!(35, got);
 }
 
 #[test]
@@ -254,8 +270,8 @@ fn test_part1_2() {
     )
     .expect("Could not create neighbors array");
 
-    let got10 = part1(arr.view(), 10, neighbors_arr.view());
-    assert_eq!(204, got10);
+    let got = part1(arr.view(), 10, neighbors_arr.view());
+    assert_eq!(204, got);
 }
 
 #[test]
@@ -287,8 +303,8 @@ fn test_part1_3() {
     )
     .expect("Could not create neighbors array");
 
-    let got10 = part1(arr.view(), 100, neighbors_arr.view());
-    assert_eq!(1656, got10);
+    let got = part1(arr.view(), 100, neighbors_arr.view());
+    assert_eq!(1656, got);
 }
 
 #[test]
@@ -513,4 +529,37 @@ fn test_time_step_5() {
 
     assert_eq!(expected, arr);
     assert_eq!(45, got);
+}
+
+#[test]
+fn test_part2() {
+    let arr = arr2(&[
+        [5, 4, 8, 3, 1, 4, 3, 2, 2, 3],
+        [2, 7, 4, 5, 8, 5, 4, 7, 1, 1],
+        [5, 2, 6, 4, 5, 5, 6, 1, 7, 3],
+        [6, 1, 4, 1, 3, 3, 6, 1, 4, 6],
+        [6, 3, 5, 7, 3, 8, 5, 4, 7, 8],
+        [4, 1, 6, 7, 5, 2, 4, 6, 4, 5],
+        [2, 1, 7, 6, 8, 4, 1, 7, 2, 1],
+        [6, 8, 8, 2, 8, 8, 1, 1, 3, 4],
+        [4, 8, 4, 6, 8, 4, 8, 5, 5, 4],
+        [5, 2, 8, 3, 7, 5, 1, 5, 2, 6],
+    ]);
+    let arr = arr.mapv(|n| Octopus::EnergyLevel(n));
+
+    let neighbors_arr: Array2<Vec<(usize, usize)>> = Array2::from_shape_vec(
+        (10, 10),
+        (0..10)
+            .into_iter()
+            .flat_map(|row_idx| {
+                (0..10)
+                    .into_iter()
+                    .map(move |col_idx| get_neighbors(10, 10, row_idx, col_idx))
+            })
+            .collect(),
+    )
+    .expect("Could not create neighbors array");
+
+    let got = part2(arr.view(), neighbors_arr.view());
+    assert_eq!(195, got);
 }
