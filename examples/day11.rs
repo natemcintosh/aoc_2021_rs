@@ -1,4 +1,4 @@
-use ndarray::{arr2, Array2, ArrayViewMut2, ArrayView2};
+use ndarray::{arr2, Array2, ArrayView2, ArrayViewMut2};
 
 fn parse_input(input: &str) -> Array2<u8> {
     let mut result = Array2::zeros((10, 10));
@@ -26,14 +26,59 @@ fn get_neighbors(nrows: i32, ncols: i32, row_idx: i32, col_idx: i32) -> Vec<(usi
         .collect()
 }
 
-// fn part1(arr: ArrayView2<u8>, n_steps: usize) -> usize {
-//     let mut arr = arr.to_owned();
+fn time_step(
+    arr: &mut ArrayViewMut2<u8>,
+    neighbors_array: ArrayView2<Vec<(usize, usize)>>,
+) -> usize {
+    // Increment all cells by 1
+    arr.mapv_inplace(|x| x + 1);
 
-//     for _ in 0..n_steps {
-//         time_step(arr);
-//     }
+    let mut count: usize = 0;
 
-// }
+    loop {
+        // Get the indices of cells with a value of 10
+        let inds_of_10s: Vec<(usize, usize)> = arr
+            .indexed_iter()
+            .filter(|(_, x)| **x == 10)
+            .map(|((r, c), _)| (r, c))
+            .collect();
+        dbg!(&arr);
+        dbg!(&inds_of_10s);
+
+        // If nothing is 10, we're done
+        if inds_of_10s.is_empty() {
+            // Reset anything equal to or over 10 to 0
+            arr.mapv_inplace(|x| if x >= 10 { 0 } else { x });
+
+            // Return the count of octopi that flashed
+            return count;
+        } else {
+            // Add inds_of_10s.len() to the count
+            count += inds_of_10s.len();
+
+            // Increment all the neighbors of the 10s
+            for (r, c) in inds_of_10s {
+                for (neighbor_r, neighbor_c) in &neighbors_array[(r, c)] {
+                    arr[(*neighbor_r, *neighbor_c)] += 1;
+                }
+            }
+        }
+    }
+}
+
+fn part1(
+    arr: ArrayView2<u8>,
+    n_steps: usize,
+    neighbors_array: ArrayView2<Vec<(usize, usize)>>,
+) -> usize {
+    let mut arr = arr.to_owned();
+    let mut counter: usize = 0;
+    for _ in 0..n_steps {
+        counter += time_step(&mut arr.view_mut(), neighbors_array);
+    }
+
+    counter
+}
 
 fn main() {
     let neighbors_arr: Array2<Vec<(usize, usize)>> = Array2::from_shape_vec(
@@ -84,7 +129,7 @@ fn test_parse_input() {
 
 // #[test]
 // fn test_part1() {
-//     let mut arr = arr2(&[
+//     let arr = arr2(&[
 //         [5, 4, 8, 3, 1, 4, 3, 2, 2, 3],
 //         [2, 7, 4, 5, 8, 5, 4, 7, 1, 1],
 //         [5, 2, 6, 4, 5, 5, 6, 1, 7, 3],
@@ -97,6 +142,55 @@ fn test_parse_input() {
 //         [5, 2, 8, 3, 7, 5, 1, 5, 2, 6],
 //     ]);
 
-//     let got = part1(&mut arr, 100);
+//     let neighbors_arr: Array2<Vec<(usize, usize)>> = Array2::from_shape_vec(
+//         (10, 10),
+//         (0..10)
+//             .into_iter()
+//             .flat_map(|row_idx| {
+//                 (0..10)
+//                     .into_iter()
+//                     .map(move |col_idx| get_neighbors(10, 10, row_idx, col_idx))
+//             })
+//             .collect(),
+//     )
+//     .expect("Could not create neighbors array");
 
+//     let got10 = part1(arr.view(), 2, neighbors_arr.view());
+//     assert_eq!(34, got10);
 // }
+
+#[test]
+fn test_time_step() {
+    let mut arr = arr2(&[
+        [1, 1, 1, 1, 1],
+        [1, 9, 9, 9, 1],
+        [1, 9, 1, 9, 1],
+        [1, 9, 9, 9, 1],
+        [1, 1, 1, 1, 1],
+    ]);
+    let neighbors_arr: Array2<Vec<(usize, usize)>> = Array2::from_shape_vec(
+        (10, 10),
+        (0..10)
+            .into_iter()
+            .flat_map(|row_idx| {
+                (0..10)
+                    .into_iter()
+                    .map(move |col_idx| get_neighbors(10, 10, row_idx, col_idx))
+            })
+            .collect(),
+    )
+    .expect("Could not create neighbors array");
+
+    let expected = arr2(&[
+        [3, 4, 5, 4, 3],
+        [4, 0, 0, 0, 4],
+        [5, 0, 0, 0, 5],
+        [4, 0, 0, 0, 4],
+        [3, 4, 5, 4, 3],
+    ]);
+
+    let got = time_step(&mut arr.view_mut(), neighbors_arr.view());
+
+    assert_eq!(expected, arr);
+    assert_eq!(9, got);
+}
