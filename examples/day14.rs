@@ -93,6 +93,9 @@ fn solve(
         itertools::MinMaxResult::MinMax(min_char, max_char) => (min_char, max_char),
     };
     max_char - min_char
+
+    // SHOULD USE A HASHMAP, AND THEN ADD 1 TO THE COUNT OF THE LAST LETTER OF THE INPUT.
+    // SUM ONLY USING THE FIRST ITEM IN EACH HASHMAP
 }
 
 fn main() {
