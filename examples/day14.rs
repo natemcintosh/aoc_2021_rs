@@ -33,7 +33,17 @@ fn parse_input(input: &str) -> (Vec<(char, char)>, HashMap<&str, (String, String
 
 // fn step(input_str: &mut HashMap<&str, usize>, rules: &HashMap<&str, String>) {
 //     // Iterate over the rules. For each one that is found in the input_str, get its
-//     // values, and increase them by 1 in the input_str map
+//     // values, and increase them by n in the input_str map, and remove them all from 
+//     // the input_str
+//     rules.iter().for_each(|(key, val)| {
+//         // If it exists in the input_str map and has a value greather than 0
+//         if let Some(n) = input_str.get_mut(key) {
+//             // Remove that many from the input_str
+//             *n=0;
+
+//             // Add that many to the two new rules in the input_str
+//         }
+//     });
 // }
 
 // fn part1(input_str: &str, rules: &HashMap<&str, String>, nsteps: usize) -> usize {
