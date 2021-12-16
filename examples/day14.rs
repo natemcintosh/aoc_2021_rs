@@ -129,7 +129,7 @@ fn main() {
 
     println!();
     println!("Part 1 result: {}", part1_result);
-    println!("Part 2 result:\n {}", part2_result);
+    println!("Part 2 result: {}", part2_result);
 }
 
 #[test]
