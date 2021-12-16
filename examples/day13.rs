@@ -106,7 +106,7 @@ fn apply_fold(arr: ArrayView2<bool>, fold: &Fold) -> Array2<bool> {
 
     // // Zip them together into a new array
     new_bottom_right.zip_mut_with(&top_left, |a, b| {
-        *a = *a | b;
+        *a |= b;
     });
 
     new_bottom_right
