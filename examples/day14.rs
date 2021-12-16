@@ -14,6 +14,7 @@ fn parse_input(
     // Now break up the start_str into pairs of letters
     let pairs: HashMap<(char, char), usize> =
         start_str
+            .trim()
             .chars()
             .tuple_windows()
             .fold(HashMap::new(), |mut acc, (c1, c2)| {
@@ -112,9 +113,12 @@ fn main() {
         std::fs::read_to_string("input/day14.txt").expect("Failed to read day 14 input");
     let (input, rules) = parse_input(&input_str);
     let last_letter = input_str
+        .lines()
+        .next()
+        .expect("Could not get first line from input string")
         .chars()
         .last()
-        .expect("Could not get last char from input string");
+        .expect("Could not get last char of first line");
     println!("Setup took {:.6} µs", setup_time.elapsed().as_micros());
 
     // Part 1
