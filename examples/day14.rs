@@ -4,7 +4,7 @@ use std::{collections::HashMap, str};
 fn parse_input(
     input: &str,
 ) -> (
-    Vec<((char, char), usize)>,
+    HashMap<(char, char), usize>,
     HashMap<(char, char), ((char, char), (char, char))>,
 ) {
     let (start_str, rules) = input
@@ -12,11 +12,16 @@ fn parse_input(
         .expect("Could not split around double newline");
 
     // Now break up the start_str into pairs of letters
-    let pairs: Vec<((char, char), usize)> = start_str
-        .chars()
-        .tuple_windows()
-        .map(|(c1, c2)| ((c1, c2), 1))
-        .collect();
+    let pairs: HashMap<(char, char), usize> =
+        start_str
+            .chars()
+            .tuple_windows()
+            .fold(HashMap::new(), |mut acc, (c1, c2)| {
+                {
+                    *acc.entry((c1, c2)).or_insert(0) += 1;
+                }
+                acc
+            });
 
     let rules = rules
         .lines()
@@ -40,11 +45,11 @@ fn parse_input(
 }
 
 fn step(
-    input: &[((char, char), usize)],
+    input: &HashMap<(char, char), usize>,
     rules: &HashMap<(char, char), ((char, char), (char, char))>,
-) -> Vec<((char, char), usize)> {
+) -> HashMap<(char, char), usize> {
     // Create a result vec
-    let mut result: Vec<((char, char), usize)> = Vec::new();
+    let mut result: HashMap<(char, char), usize> = HashMap::new();
 
     // Iterate over the input
     input
@@ -59,17 +64,18 @@ fn step(
                 .expect("Could not find pair we should have filtered out");
 
             // Add them to the result
-            result.push((*p1, *val));
-            result.push((*p2, *val));
+            *result.entry(*p1).or_insert(0) += val;
+            *result.entry(*p2).or_insert(0) += val;
         });
 
     result
 }
 
 fn solve(
-    input_str: &Vec<((char, char), usize)>,
+    input_str: &HashMap<(char, char), usize>,
     rules: &HashMap<(char, char), ((char, char), (char, char))>,
     nsteps: usize,
+    last_char: char,
 ) -> usize {
     let mut input = input_str.clone();
     for _ in 0..nsteps {
@@ -82,8 +88,9 @@ fn solve(
     for ((c1, _), val) in &input {
         *letter_count.entry(*c1).or_insert(0) += val;
     }
-    let ((_, last_letter), val) = &input.last().expect("Could not get the last item");
-    *letter_count.entry(*last_letter).or_insert(0) += val;
+
+    // Get the last character from
+    *letter_count.entry(last_char).or_insert(0) += 1;
 
     // Get the min and the max
     let min_max = letter_count.iter().map(|(_, &n)| n).minmax();
@@ -104,21 +111,25 @@ fn main() {
     let input_str =
         std::fs::read_to_string("input/day14.txt").expect("Failed to read day 14 input");
     let (input, rules) = parse_input(&input_str);
+    let last_letter = input_str
+        .chars()
+        .last()
+        .expect("Could not get last char from input string");
     println!("Setup took {:.6} µs", setup_time.elapsed().as_micros());
 
     // Part 1
     let part1_time = std::time::Instant::now();
-    let part1_result = solve(&input, &rules, 10);
+    let part1_result = solve(&input, &rules, 10, last_letter);
     println!("Part 1 took {:.6} µs", part1_time.elapsed().as_micros());
 
     // Part 2
-    // let part2_time = std::time::Instant::now();
-    // let part2_result = part2(arr.view(), &folds);
-    // println!("Part 2 took {:.6} µs", part2_time.elapsed().as_micros());
+    let part2_time = std::time::Instant::now();
+    let part2_result = solve(&input, &rules, 40, last_letter);
+    println!("Part 2 took {:.6} µs", part2_time.elapsed().as_micros());
 
     println!();
     println!("Part 1 result: {}", part1_result);
-    // println!("Part 2 result:\n {}", part2_result);
+    println!("Part 2 result:\n {}", part2_result);
 }
 
 #[test]
@@ -143,8 +154,8 @@ CC -> N
 CN -> C";
 
     let (input_str, rules) = parse_input(input_str);
-    let expected_str: Vec<((char, char), usize)> =
-        vec![(('N', 'N'), 1), (('N', 'C'), 1), (('C', 'B'), 1)];
+    let expected_str: HashMap<(char, char), usize> =
+        HashMap::from([(('N', 'N'), 1), (('N', 'C'), 1), (('C', 'B'), 1)]);
     let expected_rules = HashMap::from([
         (('C', 'H'), (('C', 'B'), ('B', 'H'))),
         (('H', 'H'), (('H', 'N'), ('N', 'H'))),
@@ -170,7 +181,8 @@ CN -> C";
 
 #[test]
 fn test_step_1() {
-    let input: Vec<((char, char), usize)> = vec![(('N', 'N'), 1), (('N', 'C'), 1), (('C', 'B'), 1)];
+    let input: HashMap<(char, char), usize> =
+        HashMap::from([(('N', 'N'), 1), (('N', 'C'), 1), (('C', 'B'), 1)]);
     let rules = HashMap::from([
         (('C', 'H'), (('C', 'B'), ('B', 'H'))),
         (('H', 'H'), (('H', 'N'), ('N', 'H'))),
@@ -191,21 +203,22 @@ fn test_step_1() {
     ]);
 
     let out = step(&input, &rules);
-    let expected: Vec<((char, char), usize)> = vec![
+    let expected: HashMap<(char, char), usize> = HashMap::from([
         (('N', 'C'), 1),
         (('C', 'N'), 1),
         (('N', 'B'), 1),
         (('B', 'C'), 1),
         (('C', 'H'), 1),
         (('H', 'B'), 1),
-    ];
+    ]);
 
     assert_eq!(expected, out);
 }
 
 #[test]
-fn test_part1() {
-    let input: Vec<((char, char), usize)> = vec![(('N', 'N'), 1), (('N', 'C'), 1), (('C', 'B'), 1)];
+fn test_part1_1() {
+    let input: HashMap<(char, char), usize> =
+        HashMap::from([(('N', 'N'), 1), (('N', 'C'), 1), (('C', 'B'), 1)]);
     let rules = HashMap::from([
         (('C', 'H'), (('C', 'B'), ('B', 'H'))),
         (('H', 'H'), (('H', 'N'), ('N', 'H'))),
@@ -225,32 +238,80 @@ fn test_part1() {
         (('C', 'N'), (('C', 'C'), ('C', 'N'))),
     ]);
 
-    let got = solve(&input, &rules, 10);
+    let got = solve(&input, &rules, 10, 'B');
     assert_eq!(1588, got);
 }
 
-// #[test]
-// fn test_part2() {
-//     let input: Vec<((char, char), usize)> = vec![(('N', 'N'), 1), (('N', 'C'), 1), (('C', 'B'), 1)];
-//     let rules = HashMap::from([
-//         (('C', 'H'), (('C', 'B'), ('B', 'H'))),
-//         (('H', 'H'), (('H', 'N'), ('N', 'H'))),
-//         (('C', 'B'), (('C', 'H'), ('H', 'B'))),
-//         (('N', 'H'), (('N', 'C'), ('C', 'H'))),
-//         (('H', 'B'), (('H', 'C'), ('C', 'B'))),
-//         (('H', 'C'), (('H', 'B'), ('B', 'C'))),
-//         (('H', 'N'), (('H', 'C'), ('C', 'N'))),
-//         (('N', 'N'), (('N', 'C'), ('C', 'N'))),
-//         (('B', 'H'), (('B', 'H'), ('H', 'H'))),
-//         (('N', 'C'), (('N', 'B'), ('B', 'C'))),
-//         (('N', 'B'), (('N', 'B'), ('B', 'B'))),
-//         (('B', 'N'), (('B', 'B'), ('B', 'N'))),
-//         (('B', 'B'), (('B', 'N'), ('N', 'B'))),
-//         (('B', 'C'), (('B', 'B'), ('B', 'C'))),
-//         (('C', 'C'), (('C', 'N'), ('N', 'C'))),
-//         (('C', 'N'), (('C', 'C'), ('C', 'N'))),
-//     ]);
+#[test]
+fn test_part1_2() {
+    let input: HashMap<(char, char), usize> =
+        HashMap::from([(('N', 'N'), 1), (('N', 'C'), 1), (('C', 'B'), 1)]);
+    let rules = HashMap::from([
+        (('C', 'H'), (('C', 'B'), ('B', 'H'))),
+        (('H', 'H'), (('H', 'N'), ('N', 'H'))),
+        (('C', 'B'), (('C', 'H'), ('H', 'B'))),
+        (('N', 'H'), (('N', 'C'), ('C', 'H'))),
+        (('H', 'B'), (('H', 'C'), ('C', 'B'))),
+        (('H', 'C'), (('H', 'B'), ('B', 'C'))),
+        (('H', 'N'), (('H', 'C'), ('C', 'N'))),
+        (('N', 'N'), (('N', 'C'), ('C', 'N'))),
+        (('B', 'H'), (('B', 'H'), ('H', 'H'))),
+        (('N', 'C'), (('N', 'B'), ('B', 'C'))),
+        (('N', 'B'), (('N', 'B'), ('B', 'B'))),
+        (('B', 'N'), (('B', 'B'), ('B', 'N'))),
+        (('B', 'B'), (('B', 'N'), ('N', 'B'))),
+        (('B', 'C'), (('B', 'B'), ('B', 'C'))),
+        (('C', 'C'), (('C', 'N'), ('N', 'C'))),
+        (('C', 'N'), (('C', 'C'), ('C', 'N'))),
+    ]);
 
-//     let got = solve(&input, &rules, 40);
-//     assert_eq!(2188189693529, got);
-// }
+    let got = solve(&input, &rules, 2, 'B');
+    assert_eq!(5, got);
+}
+
+#[test]
+fn test_part2() {
+    let input: HashMap<(char, char), usize> =
+        HashMap::from([(('N', 'N'), 1), (('N', 'C'), 1), (('C', 'B'), 1)]);
+    let rules = HashMap::from([
+        (('C', 'H'), (('C', 'B'), ('B', 'H'))),
+        (('H', 'H'), (('H', 'N'), ('N', 'H'))),
+        (('C', 'B'), (('C', 'H'), ('H', 'B'))),
+        (('N', 'H'), (('N', 'C'), ('C', 'H'))),
+        (('H', 'B'), (('H', 'C'), ('C', 'B'))),
+        (('H', 'C'), (('H', 'B'), ('B', 'C'))),
+        (('H', 'N'), (('H', 'C'), ('C', 'N'))),
+        (('N', 'N'), (('N', 'C'), ('C', 'N'))),
+        (('B', 'H'), (('B', 'H'), ('H', 'H'))),
+        (('N', 'C'), (('N', 'B'), ('B', 'C'))),
+        (('N', 'B'), (('N', 'B'), ('B', 'B'))),
+        (('B', 'N'), (('B', 'B'), ('B', 'N'))),
+        (('B', 'B'), (('B', 'N'), ('N', 'B'))),
+        (('B', 'C'), (('B', 'B'), ('B', 'C'))),
+        (('C', 'C'), (('C', 'N'), ('N', 'C'))),
+        (('C', 'N'), (('C', 'C'), ('C', 'N'))),
+    ]);
+
+    let got = solve(&input, &rules, 40, 'B');
+    assert_eq!(2_188_189_693_529, got);
+}
+
+#[test]
+fn test_part1_actual() {
+    let input_str =
+        std::fs::read_to_string("input/day14.txt").expect("Failed to read day 14 input");
+    let (input, rules) = parse_input(&input_str);
+
+    let got = solve(&input, &rules, 10, 'K');
+    assert_eq!(2345, got);
+}
+
+#[test]
+fn test_part2_actual() {
+    let input_str =
+        std::fs::read_to_string("input/day14.txt").expect("Failed to read day 14 input");
+    let (input, rules) = parse_input(&input_str);
+
+    let got = solve(&input, &rules, 40, 'K');
+    assert_eq!(2432786807053, got);
+}
