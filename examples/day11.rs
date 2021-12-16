@@ -74,36 +74,34 @@ fn time_step(
             // No one else will flash this step. Set everyone who has flashed back to 0
             arr.mapv_inplace(|octo| match octo {
                 Octopus::EnergyLevel(e) => Octopus::EnergyLevel(e),
-                Octopus::AlreadyFlashed => Octopus::EnergyLevel(0),
-                Octopus::AboutToFlash => Octopus::EnergyLevel(0),
+                Octopus::AlreadyFlashed | Octopus::AboutToFlash => Octopus::EnergyLevel(0),
             });
 
             // Return the count
             return count;
-        } else {
-            // Increase the count
-            count += about_to_flash.len();
+        }
 
-            // Carry out the flashes
-            about_to_flash.iter().for_each(|(r, c)| {
-                // Flash the octopus in question
-                arr[(*r, *c)] = Octopus::AlreadyFlashed;
+        // Increase the count
+        count += about_to_flash.len();
 
-                // Increment its neighbors
-                for (neighbor_r, neighbor_c) in &neighbors_array[(*r, *c)] {
-                    match arr[(*neighbor_r, *neighbor_c)] {
-                        Octopus::EnergyLevel(e) if e < 9 => {
-                            arr[(*neighbor_r, *neighbor_c)] = Octopus::EnergyLevel(e + 1);
-                        }
-                        Octopus::EnergyLevel(_) => {
-                            arr[(*neighbor_r, *neighbor_c)] = Octopus::AboutToFlash;
-                        }
-                        // Do nothing if about to flash or already flashed
-                        Octopus::AboutToFlash => (),
-                        Octopus::AlreadyFlashed => (),
+        // Carry out the flashes
+        for (r, c) in &about_to_flash {
+            // Flash the octopus in question
+            arr[(*r, *c)] = Octopus::AlreadyFlashed;
+
+            // Increment its neighbors
+            for (neighbor_r, neighbor_c) in &neighbors_array[(*r, *c)] {
+                match arr[(*neighbor_r, *neighbor_c)] {
+                    Octopus::EnergyLevel(e) if e < 9 => {
+                        arr[(*neighbor_r, *neighbor_c)] = Octopus::EnergyLevel(e + 1);
                     }
+                    Octopus::EnergyLevel(_) => {
+                        arr[(*neighbor_r, *neighbor_c)] = Octopus::AboutToFlash;
+                    }
+                    // Do nothing if about to flash or already flashed
+                    Octopus::AboutToFlash | Octopus::AlreadyFlashed => (),
                 }
-            });
+            }
         }
 
         // Finally, any octopus that flashed during this step has its energy level set to 0, as it used all of its energy to flash.
@@ -146,7 +144,7 @@ fn main() {
     let input_str =
         std::fs::read_to_string("input/day11.txt").expect("Failed to read day 11 input");
     let input = parse_input(&input_str);
-    let input = input.mapv(|n| Octopus::EnergyLevel(n));
+    let input = input.mapv(Octopus::EnergyLevel);
 
     let neighbors_arr: Array2<Vec<(usize, usize)>> = Array2::from_shape_vec(
         (10, 10),
