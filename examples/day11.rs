@@ -563,3 +563,51 @@ fn test_part2() {
     let got = part2(arr.view(), neighbors_arr.view());
     assert_eq!(195, got);
 }
+
+#[test]
+fn test_part1_actual() {
+    let input_str =
+        std::fs::read_to_string("input/day11.txt").expect("Failed to read day 11 input");
+    let arr = parse_input(&input_str);
+    let arr = arr.mapv(|n| Octopus::EnergyLevel(n));
+
+    let neighbors_arr: Array2<Vec<(usize, usize)>> = Array2::from_shape_vec(
+        (10, 10),
+        (0..10)
+            .into_iter()
+            .flat_map(|row_idx| {
+                (0..10)
+                    .into_iter()
+                    .map(move |col_idx| get_neighbors(10, 10, row_idx, col_idx))
+            })
+            .collect(),
+    )
+    .expect("Could not create neighbors array");
+
+    let got = part1(arr.view(), 100, neighbors_arr.view());
+    assert_eq!(1757, got);
+}
+
+#[test]
+fn test_part2_actual() {
+    let input_str =
+        std::fs::read_to_string("input/day11.txt").expect("Failed to read day 11 input");
+    let arr = parse_input(&input_str);
+    let arr = arr.mapv(|n| Octopus::EnergyLevel(n));
+
+    let neighbors_arr: Array2<Vec<(usize, usize)>> = Array2::from_shape_vec(
+        (10, 10),
+        (0..10)
+            .into_iter()
+            .flat_map(|row_idx| {
+                (0..10)
+                    .into_iter()
+                    .map(move |col_idx| get_neighbors(10, 10, row_idx, col_idx))
+            })
+            .collect(),
+    )
+    .expect("Could not create neighbors array");
+
+    let got = part2(arr.view(), neighbors_arr.view());
+    assert_eq!(422, got);
+}
