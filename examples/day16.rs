@@ -5,42 +5,42 @@ enum PacketContents {
     Operator { op_type: u8, packets: Vec<Packet> },
 }
 
-fn parse_literal_bytes(s: &str) -> PacketContents::LiteralValue {}
+// fn parse_literal_bytes(s: &str) -> PacketContents::LiteralValue {}
 
-fn parse_operator_packet(s: &str) -> PacketContents::Operator {
-    // The first character is the length type ID
-    match &s.chars().next() {
-        Some(n) => match n {
-            '0' => {
-                // If the length type ID is 0, then the next 15 bits are a number that
-                // represents the total length in bits of the sub-packets contained by
-                // this packet.
+// fn parse_operator_packet(s: &str) -> PacketContents::Operator {
+//     // The first character is the length type ID
+//     match &s.chars().next() {
+//         Some(n) => match n {
+//             '0' => {
+//                 // If the length type ID is 0, then the next 15 bits are a number that
+//                 // represents the total length in bits of the sub-packets contained by
+//                 // this packet.
 
-                // Read the next 15 bits into a decimal number
-                let length_in_bits = usize::from_str_radix(&s[1..17], 2)
-                    .expect("Could not parse the length in bits of the number of subpackets");
+//                 // Read the next 15 bits into a decimal number
+//                 let length_in_bits = usize::from_str_radix(&s[1..17], 2)
+//                     .expect("Could not parse the length in bits of the number of subpackets");
 
-                // Get just that many bits
-                let sub_packet_bits = &s[16..(16 + length_in_bits + 1)];
+//                 // Get just that many bits
+//                 let sub_packet_bits = &s[16..(16 + length_in_bits + 1)];
 
-                // Somehow have to parse subpackets, and know how many bits are left to
-                // parse after each one
-            }
-            '1' => {
-                // If the length type ID is 1, then the next 11 bits are a number that
-                // represents the number of sub-packets immediately contained by this packet.
+//                 // Somehow have to parse subpackets, and know how many bits are left to
+//                 // parse after each one
+//             }
+//             '1' => {
+//                 // If the length type ID is 1, then the next 11 bits are a number that
+//                 // represents the number of sub-packets immediately contained by this packet.
 
-                // Read the next 11 bits into a decimal number
-                let number_of_subpackets = usize::from_str_radix(&s[1..12], 2)
-                    .expect("Could not parse the number of subpackets");
+//                 // Read the next 11 bits into a decimal number
+//                 let number_of_subpackets = usize::from_str_radix(&s[1..12], 2)
+//                     .expect("Could not parse the number of subpackets");
 
-                // Continually parse subpackets until reaching `number_of_subpackets`
-            }
-            _ => panic!("length type ID was not 0 or 1"),
-        },
-        None => panic!("Could not get first character while parsing operator packet"),
-    }
-}
+//                 // Continually parse subpackets until reaching `number_of_subpackets`
+//             }
+//             _ => panic!("length type ID was not 0 or 1"),
+//         },
+//         None => panic!("Could not get first character while parsing operator packet"),
+//     }
+// }
 
 struct Packet {
     version: u8,
@@ -49,24 +49,24 @@ struct Packet {
     content: Rc<PacketContents>,
 }
 
-fn parse_packet(s: &str) -> Packet {
-    // The three bits are the packet version
-    let version = u8::from_str_radix(&s[..3], 2).expect("Could not parse packet version");
+// fn parse_packet(s: &str) -> Packet {
+//     // The three bits are the packet version
+//     let version = u8::from_str_radix(&s[..3], 2).expect("Could not parse packet version");
 
-    // The next three bits are the packet type ID
-    let typeid = u8::from_str_radix(&s[3..6], 2).expect("Could not parse type ID");
+//     // The next three bits are the packet type ID
+//     let typeid = u8::from_str_radix(&s[3..6], 2).expect("Could not parse type ID");
 
-    // Match the typeid, and produce the correct PacketContents
-    let content: Rc<PacketContents> = match typeid {
-        4 => Rc::new(parse_literal_bytes(&s[6..])),
-        v => Rc::new(PacketContents::Operator {
-            op_type: v,
-            packets: parse_operator_packet(&s[6..]),
-        }),
-    };
+//     // Match the typeid, and produce the correct PacketContents
+//     let content: Rc<PacketContents> = match typeid {
+//         4 => Rc::new(parse_literal_bytes(&s[6..])),
+//         v => Rc::new(PacketContents::Operator {
+//             op_type: v,
+//             packets: parse_operator_packet(&s[6..]),
+//         }),
+//     };
 
-    Packet { version, content }
-}
+//     Packet { version, content }
+// }
 
 fn hex_to_binary(hex: &str) -> String {
     hex.chars().map(to_binary).collect()
@@ -128,14 +128,14 @@ fn test_hex_parse_3() {
     assert_eq!(expected, &got);
 }
 
-#[test]
-fn test_parse_packet_literal() {
-    let bin = "110100101111111000101000";
-    let Content: Rc<PacketContents> = Rc::new(PacketContents::LiteralValue(2021));
-    let expected = Packet {
-        version: 6,
-        content: Content,
-    };
+// #[test]
+// fn test_parse_packet_literal() {
+//     let bin = "110100101111111000101000";
+//     let Content: Rc<PacketContents> = Rc::new(PacketContents::LiteralValue(2021));
+//     let expected = Packet {
+//         version: 6,
+//         content: Content,
+//     };
 
-    let got = parse_packet(bin);
-}
+//     let got = parse_packet(bin);
+// }
