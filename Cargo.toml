@@ -64,3 +64,7 @@ test = true
 [[example]]
 name = "day16"
 test = true
+
+[[example]]
+name = "day17"
+test = true
