@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 fn parse_input(input: &str) -> (Vec<char>, HashMap<(i64, i64), char>) {
     // The first line is the image enhancement algorithm
@@ -54,6 +54,29 @@ fn get_replacement(
 
     // What should the replacement pixel be?
     algo[idx]
+}
+
+fn bubble_out(curr_points: &HashMap<(i64, i64), char>) -> HashMap<(i64, i64), char> {
+    // Everything is either off, or it is on and stored in the hashmap
+    let curr_keys: HashSet<(i64, i64)> = curr_points.keys().cloned().collect();
+
+    // For each point in the curr_points, bubble it out, and collect the points in a hashset
+    let neighbors: HashSet<(i64, i64)> = curr_points
+        .iter()
+        .flat_map(|((row, col), _)| DIRS.iter().map(move |(r, c)| (row + r, col + c)))
+        .collect();
+
+    // Remove any of the current keys from the neighbors
+    let neighbors = neighbors.difference(&curr_keys);
+
+    // Build the corresponding hashmap
+    let mut result = curr_points.clone();
+    // Add the new points
+    for n in neighbors {
+        result.insert(*n, '.');
+    }
+
+    result
 }
 
 // fn enhance(arr: ArrayView2<bool>, algo: &[bool]) -> Array2<bool> {
