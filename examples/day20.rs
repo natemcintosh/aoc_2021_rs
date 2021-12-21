@@ -26,13 +26,20 @@ fn parse_input(input: &str) -> (Vec<char>, HashMap<(i64, i64), char>) {
     (algorithm, image)
 }
 
-const DIRS: [(i64, i64); 5] = [(-1, 0), (-1, 1), (0, 1), (1, 0), (1, 1)];
+// The directions have to go top to bottom, left to right
+const DIRS: [(i64, i64); 9] = [
+    (-1, -1),
+    (-1, 0),
+    (-1, 1),
+    (0, -1),
+    (0, 0),
+    (0, 1),
+    (1, -1),
+    (1, 0),
+    (1, 1),
+];
 
-fn get_replacement(
-    image: &HashMap<(i64, i64), char>,
-    this_pixel: (i64, i64),
-    algo: &[char],
-) -> char {
+fn get_index(image: &HashMap<(i64, i64), char>, this_pixel: (i64, i64)) -> usize {
     // What are the neighbors for this_pixel?
     let neighbors: Vec<(i64, i64)> = DIRS
         .into_iter()
@@ -46,14 +53,15 @@ fn get_replacement(
             Some(c) => *c,
             None => '.',
         })
+        .map(|c| match c {
+            '#' => '1',
+            '.' => '0',
+            some_char => panic!("Character, {}, was not '0' or '1'", some_char),
+        })
         .collect();
 
     // Convert it to decimal
-    let idx = usize::from_str_radix(&binary_representation, 2)
-        .expect("Could not parse binary representation");
-
-    // What should the replacement pixel be?
-    algo[idx]
+    usize::from_str_radix(&binary_representation, 2).expect("Could not parse binary representation")
 }
 
 fn bubble_out(curr_points: &HashMap<(i64, i64), char>) -> HashMap<(i64, i64), char> {
@@ -79,32 +87,50 @@ fn bubble_out(curr_points: &HashMap<(i64, i64), char>) -> HashMap<(i64, i64), ch
     result
 }
 
-// fn enhance(arr: ArrayView2<bool>, algo: &[bool]) -> Array2<bool> {
-//     // Create a result
-//     let mut result = pad_arr(arr, false);
+fn enhance(curr_points: &HashMap<(i64, i64), char>, algo: &[char]) -> HashMap<(i64, i64), char> {
+    // First bubble out to get all locations that might require enhancement
+    let expanded_pts = bubble_out(curr_points);
 
-//     // Assuming that the input arr has already been padded.
-//     let input_ncols = arr.ncols() - 2;
-//     let input_nrows = arr.nrows() - 2;
-//     // For each window of size 3, get the decimal index for the algorithm
-//     // the windows() method seems to go across the rows first, then down the columns
-//     for (window, (row_idx, col_idx)) in itertools::zip_eq(
-//         arr.windows((3, 3)),
-//         (0..input_nrows)
-//             .into_iter()
-//             .flat_map(|r| (0..input_ncols).into_iter().map(move |c| (r, c))),
-//     ) {
-//         dbg!(window, row_idx, col_idx);
-//         let idx = arr_to_binary_to_decimal(window);
-//         let result_pixel = algo[idx];
-//         result[(row_idx + 1, col_idx + 1)] = result_pixel;
-//     }
+    // Create a new hashmap to put results in
+    let mut result: HashMap<(i64, i64), char> = HashMap::with_capacity(expanded_pts.len());
 
-//     result
-// }
+    // For each point in `expanded_pts`, get its replacement
+    for &this_pixel in expanded_pts.keys() {
+        let idx = get_index(curr_points, this_pixel);
+        result.insert(this_pixel, algo[idx]);
+    }
+
+    result
+}
+
+fn part1(curr_points: &HashMap<(i64, i64), char>, algo: &[char]) -> usize {
+    // Run enhance twice, then count the pixels == '#'
+    let once = enhance(curr_points, algo);
+    let twice = enhance(&once, algo);
+    twice.values().filter(|&&c| c == '#').count()
+}
 
 fn main() {
-    println!("Hello, world!");
+    let setup_time = std::time::Instant::now();
+
+    let input_str =
+        std::fs::read_to_string("input/day20.txt").expect("Failed to read day 20 input");
+    let (algo, input_image) = parse_input(&input_str);
+    println!("Setup took {:.6} µs", setup_time.elapsed().as_micros());
+
+    // Part 1
+    let part1_time = std::time::Instant::now();
+    let part1_result = part1(&input_image, &algo);
+    println!("Part 1 took {:.6} ms", part1_time.elapsed().as_millis());
+
+    // Part 2
+    // let part2_time = std::time::Instant::now();
+    // let part2_result = part2(&board_numbers, &board_views);
+    // println!("Part 2 took {:.6} µs", part2_time.elapsed().as_micros());
+
+    println!();
+    println!("Part 1 result: {}", part1_result);
+    // println!("Part 2 result: {}", part2_result);
 }
 
 #[test]
@@ -183,75 +209,241 @@ fn test_parse_input() {
     assert_eq!(expected_image, input_image);
 }
 
-// #[test]
-// fn test_enhance() {
-//     let arr = arr2(&[
-//         [false, false, false, false, false, false, false],
-//         [false, true, false, false, true, false, false],
-//         [false, true, false, false, false, false, false],
-//         [false, true, true, false, false, true, false],
-//         [false, false, false, true, false, false, false],
-//         [false, false, false, true, true, true, false],
-//         [false, false, false, false, false, false, false],
-//     ]);
+#[test]
+fn test_enhance() {
+    let image = HashMap::from([
+        ((0, 0), '#'),
+        ((0, 1), '.'),
+        ((0, 2), '.'),
+        ((0, 3), '#'),
+        ((0, 4), '.'),
+        ((1, 0), '#'),
+        ((1, 1), '.'),
+        ((1, 2), '.'),
+        ((1, 3), '.'),
+        ((1, 4), '.'),
+        ((2, 0), '#'),
+        ((2, 1), '#'),
+        ((2, 2), '.'),
+        ((2, 3), '.'),
+        ((2, 4), '#'),
+        ((3, 0), '.'),
+        ((3, 1), '.'),
+        ((3, 2), '#'),
+        ((3, 3), '.'),
+        ((3, 4), '.'),
+        ((4, 0), '.'),
+        ((4, 1), '.'),
+        ((4, 2), '#'),
+        ((4, 3), '#'),
+        ((4, 4), '#'),
+    ]);
 
-//     let algo = vec![
-//         false, false, true, false, true, false, false, true, true, true, true, true, false, true,
-//         false, true, false, true, false, true, true, true, false, true, true, false, false, false,
-//         false, false, true, true, true, false, true, true, false, true, false, false, true, true,
-//         true, false, true, true, true, true, false, false, true, true, true, true, true, false,
-//         false, true, false, false, false, false, true, false, false, true, false, false, true,
-//         true, false, false, true, true, true, false, false, true, true, true, true, true, true,
-//         false, true, true, true, false, false, false, true, true, true, true, false, false, true,
-//         false, false, true, true, true, true, true, false, false, true, true, false, false, true,
-//         false, true, true, true, true, true, false, false, false, true, true, false, true, false,
-//         true, false, false, true, false, true, true, false, false, true, false, true, false, false,
-//         false, false, false, false, true, false, true, true, true, false, true, true, true, true,
-//         true, true, false, true, true, true, false, true, true, true, true, false, false, false,
-//         true, false, true, true, false, true, true, false, false, true, false, false, true, false,
-//         false, true, true, true, true, true, false, false, false, false, false, true, false, true,
-//         false, false, false, false, true, true, true, false, false, true, false, true, true, false,
-//         false, false, false, false, false, true, false, false, false, false, false, true, false,
-//         false, true, false, false, true, false, false, true, true, false, false, true, false,
-//         false, false, true, true, false, true, true, true, true, true, true, false, true, true,
-//         true, true, false, true, true, true, true, false, true, false, true, false, false, false,
-//         true, false, false, false, false, false, false, false, true, false, false, true, false,
-//         true, false, true, false, false, false, true, true, true, true, false, true, true, false,
-//         true, false, false, false, false, false, false, true, false, false, true, false, false,
-//         false, true, true, false, true, false, true, true, false, false, true, false, false, false,
-//         true, true, false, true, false, true, true, false, false, true, true, true, false, true,
-//         false, false, false, false, false, false, true, false, true, false, false, false, false,
-//         false, false, false, true, false, true, false, true, false, true, true, true, true, false,
-//         true, true, true, false, true, true, false, false, false, true, false, false, false, false,
-//         false, true, true, true, true, false, true, false, false, true, false, false, true, false,
-//         true, true, false, true, false, false, false, false, true, true, false, false, true, false,
-//         true, true, true, true, false, false, false, false, true, true, false, false, false, true,
-//         true, false, false, true, false, false, false, true, false, false, false, false, false,
-//         false, true, false, true, false, false, false, false, false, false, false, true, false,
-//         false, false, false, false, false, false, true, true, false, false, true, true, true, true,
-//         false, false, true, false, false, false, true, false, true, false, true, false, false,
-//         false, true, true, false, false, true, false, true, false, false, true, true, true, false,
-//         false, true, true, true, true, true, false, false, false, false, false, false, false,
-//         false, true, false, false, true, true, true, true, false, false, false, false, false,
-//         false, true, false, false, true,
-//     ];
+    let algo = vec![
+        '.', '.', '#', '.', '#', '.', '.', '#', '#', '#', '#', '#', '.', '#', '.', '#', '.', '#',
+        '.', '#', '#', '#', '.', '#', '#', '.', '.', '.', '.', '.', '#', '#', '#', '.', '#', '#',
+        '.', '#', '.', '.', '#', '#', '#', '.', '#', '#', '#', '#', '.', '.', '#', '#', '#', '#',
+        '#', '.', '.', '#', '.', '.', '.', '.', '#', '.', '.', '#', '.', '.', '#', '#', '.', '.',
+        '#', '#', '#', '.', '.', '#', '#', '#', '#', '#', '#', '.', '#', '#', '#', '.', '.', '.',
+        '#', '#', '#', '#', '.', '.', '#', '.', '.', '#', '#', '#', '#', '#', '.', '.', '#', '#',
+        '.', '.', '#', '.', '#', '#', '#', '#', '#', '.', '.', '.', '#', '#', '.', '#', '.', '#',
+        '.', '.', '#', '.', '#', '#', '.', '.', '#', '.', '#', '.', '.', '.', '.', '.', '.', '#',
+        '.', '#', '#', '#', '.', '#', '#', '#', '#', '#', '#', '.', '#', '#', '#', '.', '#', '#',
+        '#', '#', '.', '.', '.', '#', '.', '#', '#', '.', '#', '#', '.', '.', '#', '.', '.', '#',
+        '.', '.', '#', '#', '#', '#', '#', '.', '.', '.', '.', '.', '#', '.', '#', '.', '.', '.',
+        '.', '#', '#', '#', '.', '.', '#', '.', '#', '#', '.', '.', '.', '.', '.', '.', '#', '.',
+        '.', '.', '.', '.', '#', '.', '.', '#', '.', '.', '#', '.', '.', '#', '#', '.', '.', '#',
+        '.', '.', '.', '#', '#', '.', '#', '#', '#', '#', '#', '#', '.', '#', '#', '#', '#', '.',
+        '#', '#', '#', '#', '.', '#', '.', '#', '.', '.', '.', '#', '.', '.', '.', '.', '.', '.',
+        '.', '#', '.', '.', '#', '.', '#', '.', '#', '.', '.', '.', '#', '#', '#', '#', '.', '#',
+        '#', '.', '#', '.', '.', '.', '.', '.', '.', '#', '.', '.', '#', '.', '.', '.', '#', '#',
+        '.', '#', '.', '#', '#', '.', '.', '#', '.', '.', '.', '#', '#', '.', '#', '.', '#', '#',
+        '.', '.', '#', '#', '#', '.', '#', '.', '.', '.', '.', '.', '.', '#', '.', '#', '.', '.',
+        '.', '.', '.', '.', '.', '#', '.', '#', '.', '#', '.', '#', '#', '#', '#', '.', '#', '#',
+        '#', '.', '#', '#', '.', '.', '.', '#', '.', '.', '.', '.', '.', '#', '#', '#', '#', '.',
+        '#', '.', '.', '#', '.', '.', '#', '.', '#', '#', '.', '#', '.', '.', '.', '.', '#', '#',
+        '.', '.', '#', '.', '#', '#', '#', '#', '.', '.', '.', '.', '#', '#', '.', '.', '.', '#',
+        '#', '.', '.', '#', '.', '.', '.', '#', '.', '.', '.', '.', '.', '.', '#', '.', '#', '.',
+        '.', '.', '.', '.', '.', '.', '#', '.', '.', '.', '.', '.', '.', '.', '#', '#', '.', '.',
+        '#', '#', '#', '#', '.', '.', '#', '.', '.', '.', '#', '.', '#', '.', '#', '.', '.', '.',
+        '#', '#', '.', '.', '#', '.', '#', '.', '.', '#', '#', '#', '.', '.', '#', '#', '#', '#',
+        '#', '.', '.', '.', '.', '.', '.', '.', '.', '#', '.', '.', '#', '#', '#', '#', '.', '.',
+        '.', '.', '.', '.', '#', '.', '.', '#',
+    ];
 
-//     let got = enhance(arr.view(), &algo);
+    let got = enhance(&image, &algo);
 
-//     let expected_arr = arr2(&[
-//         [
-//             false, false, false, false, false, false, false, false, false,
-//         ],
-//         [false, false, true, true, false, true, true, false, false],
-//         [false, true, false, false, true, false, true, false, false],
-//         [false, true, true, false, true, false, false, true, false],
-//         [false, true, true, true, true, false, false, true, false],
-//         [false, false, true, false, false, true, true, false, false],
-//         [false, false, false, true, true, false, false, true, false],
-//         [false, false, false, false, true, false, true, false, false],
-//         [
-//             false, false, false, false, false, false, false, false, false,
-//         ],
-//     ]);
-//     assert_eq!(expected_arr, got);
-// }
+    let expected_image = HashMap::from([
+        ((-1, -1), '.'),
+        ((-1, 0), '#'),
+        ((-1, 1), '#'),
+        ((-1, 2), '.'),
+        ((-1, 3), '#'),
+        ((-1, 4), '#'),
+        ((-1, 5), '.'),
+        ((0, -1), '#'),
+        ((0, 0), '.'),
+        ((0, 1), '.'),
+        ((0, 2), '#'),
+        ((0, 3), '.'),
+        ((0, 4), '#'),
+        ((0, 5), '.'),
+        ((1, -1), '#'),
+        ((1, 0), '#'),
+        ((1, 1), '.'),
+        ((1, 2), '#'),
+        ((1, 3), '.'),
+        ((1, 4), '.'),
+        ((1, 5), '#'),
+        ((2, -1), '#'),
+        ((2, 0), '#'),
+        ((2, 1), '#'),
+        ((2, 2), '#'),
+        ((2, 3), '.'),
+        ((2, 4), '.'),
+        ((2, 5), '#'),
+        ((3, -1), '.'),
+        ((3, 0), '#'),
+        ((3, 1), '.'),
+        ((3, 2), '.'),
+        ((3, 3), '#'),
+        ((3, 4), '#'),
+        ((3, 5), '.'),
+        ((4, -1), '.'),
+        ((4, 0), '.'),
+        ((4, 1), '#'),
+        ((4, 2), '#'),
+        ((4, 3), '.'),
+        ((4, 4), '.'),
+        ((4, 5), '#'),
+        ((5, -1), '.'),
+        ((5, 0), '.'),
+        ((5, 1), '.'),
+        ((5, 2), '#'),
+        ((5, 3), '.'),
+        ((5, 4), '#'),
+        ((5, 5), '.'),
+    ]);
+
+    assert_eq!(expected_image, got);
+}
+
+#[test]
+fn test_get_index_1() {
+    let image = HashMap::from([
+        ((0, 0), '#'),
+        ((0, 1), '#'),
+        ((0, 2), '.'),
+        ((1, 0), '#'),
+        ((1, 1), '.'),
+        ((1, 2), '.'),
+        ((2, 0), '#'),
+        ((2, 1), '#'),
+        ((2, 2), '#'),
+    ]);
+
+    let got = get_index(&image, (0, 0));
+    assert_eq!(26, got);
+}
+
+#[test]
+fn test_get_replacement_2() {
+    let image = HashMap::from([
+        ((0, 0), '#'),
+        ((0, 1), '#'),
+        ((0, 2), '.'),
+        ((1, 0), '#'),
+        ((1, 1), '.'),
+        ((1, 2), '.'),
+        ((2, 0), '#'),
+        ((2, 1), '#'),
+        ((2, 2), '#'),
+    ]);
+
+    let got = get_index(&image, (1, 1));
+    assert_eq!(423, got);
+}
+
+#[test]
+fn test_get_replacement_3() {
+    let image = HashMap::from([
+        ((0, 0), '.'),
+        ((0, 1), '.'),
+        ((0, 2), '.'),
+        ((1, 0), '#'),
+        ((1, 1), '.'),
+        ((1, 2), '.'),
+        ((2, 0), '.'),
+        ((2, 1), '#'),
+        ((2, 2), '.'),
+    ]);
+
+    let got = get_index(&image, (1, 1));
+    assert_eq!(34, got);
+}
+
+#[test]
+fn test_part1() {
+    let image = HashMap::from([
+        ((0, 0), '#'),
+        ((0, 1), '.'),
+        ((0, 2), '.'),
+        ((0, 3), '#'),
+        ((0, 4), '.'),
+        ((1, 0), '#'),
+        ((1, 1), '.'),
+        ((1, 2), '.'),
+        ((1, 3), '.'),
+        ((1, 4), '.'),
+        ((2, 0), '#'),
+        ((2, 1), '#'),
+        ((2, 2), '.'),
+        ((2, 3), '.'),
+        ((2, 4), '#'),
+        ((3, 0), '.'),
+        ((3, 1), '.'),
+        ((3, 2), '#'),
+        ((3, 3), '.'),
+        ((3, 4), '.'),
+        ((4, 0), '.'),
+        ((4, 1), '.'),
+        ((4, 2), '#'),
+        ((4, 3), '#'),
+        ((4, 4), '#'),
+    ]);
+
+    let algo = vec![
+        '.', '.', '#', '.', '#', '.', '.', '#', '#', '#', '#', '#', '.', '#', '.', '#', '.', '#',
+        '.', '#', '#', '#', '.', '#', '#', '.', '.', '.', '.', '.', '#', '#', '#', '.', '#', '#',
+        '.', '#', '.', '.', '#', '#', '#', '.', '#', '#', '#', '#', '.', '.', '#', '#', '#', '#',
+        '#', '.', '.', '#', '.', '.', '.', '.', '#', '.', '.', '#', '.', '.', '#', '#', '.', '.',
+        '#', '#', '#', '.', '.', '#', '#', '#', '#', '#', '#', '.', '#', '#', '#', '.', '.', '.',
+        '#', '#', '#', '#', '.', '.', '#', '.', '.', '#', '#', '#', '#', '#', '.', '.', '#', '#',
+        '.', '.', '#', '.', '#', '#', '#', '#', '#', '.', '.', '.', '#', '#', '.', '#', '.', '#',
+        '.', '.', '#', '.', '#', '#', '.', '.', '#', '.', '#', '.', '.', '.', '.', '.', '.', '#',
+        '.', '#', '#', '#', '.', '#', '#', '#', '#', '#', '#', '.', '#', '#', '#', '.', '#', '#',
+        '#', '#', '.', '.', '.', '#', '.', '#', '#', '.', '#', '#', '.', '.', '#', '.', '.', '#',
+        '.', '.', '#', '#', '#', '#', '#', '.', '.', '.', '.', '.', '#', '.', '#', '.', '.', '.',
+        '.', '#', '#', '#', '.', '.', '#', '.', '#', '#', '.', '.', '.', '.', '.', '.', '#', '.',
+        '.', '.', '.', '.', '#', '.', '.', '#', '.', '.', '#', '.', '.', '#', '#', '.', '.', '#',
+        '.', '.', '.', '#', '#', '.', '#', '#', '#', '#', '#', '#', '.', '#', '#', '#', '#', '.',
+        '#', '#', '#', '#', '.', '#', '.', '#', '.', '.', '.', '#', '.', '.', '.', '.', '.', '.',
+        '.', '#', '.', '.', '#', '.', '#', '.', '#', '.', '.', '.', '#', '#', '#', '#', '.', '#',
+        '#', '.', '#', '.', '.', '.', '.', '.', '.', '#', '.', '.', '#', '.', '.', '.', '#', '#',
+        '.', '#', '.', '#', '#', '.', '.', '#', '.', '.', '.', '#', '#', '.', '#', '.', '#', '#',
+        '.', '.', '#', '#', '#', '.', '#', '.', '.', '.', '.', '.', '.', '#', '.', '#', '.', '.',
+        '.', '.', '.', '.', '.', '#', '.', '#', '.', '#', '.', '#', '#', '#', '#', '.', '#', '#',
+        '#', '.', '#', '#', '.', '.', '.', '#', '.', '.', '.', '.', '.', '#', '#', '#', '#', '.',
+        '#', '.', '.', '#', '.', '.', '#', '.', '#', '#', '.', '#', '.', '.', '.', '.', '#', '#',
+        '.', '.', '#', '.', '#', '#', '#', '#', '.', '.', '.', '.', '#', '#', '.', '.', '.', '#',
+        '#', '.', '.', '#', '.', '.', '.', '#', '.', '.', '.', '.', '.', '.', '#', '.', '#', '.',
+        '.', '.', '.', '.', '.', '.', '#', '.', '.', '.', '.', '.', '.', '.', '#', '#', '.', '.',
+        '#', '#', '#', '#', '.', '.', '#', '.', '.', '.', '#', '.', '#', '.', '#', '.', '.', '.',
+        '#', '#', '.', '.', '#', '.', '#', '.', '.', '#', '#', '#', '.', '.', '#', '#', '#', '#',
+        '#', '.', '.', '.', '.', '.', '.', '.', '.', '#', '.', '.', '#', '#', '#', '#', '.', '.',
+        '.', '.', '.', '.', '#', '.', '.', '#',
+    ];
+
+    let got = part1(&image, &algo);
+    assert_eq!(35, got);
+}
