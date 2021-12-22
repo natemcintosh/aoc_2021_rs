@@ -39,7 +39,11 @@ const DIRS: [(i64, i64); 9] = [
     (1, 1),
 ];
 
-fn get_index(image: &HashMap<(i64, i64), char>, this_pixel: (i64, i64)) -> usize {
+fn get_index(
+    image: &HashMap<(i64, i64), char>,
+    this_pixel: (i64, i64),
+    value_at_inf: char,
+) -> usize {
     // What are the neighbors for this_pixel?
     let neighbors: Vec<(i64, i64)> = DIRS
         .into_iter()
@@ -51,7 +55,7 @@ fn get_index(image: &HashMap<(i64, i64), char>, this_pixel: (i64, i64)) -> usize
         .iter()
         .map(|&key| match image.get(&key) {
             Some(c) => *c,
-            None => '.',
+            None => value_at_inf,
         })
         .map(|c| match c {
             '#' => '1',
@@ -87,7 +91,11 @@ fn bubble_out(curr_points: &HashMap<(i64, i64), char>) -> HashMap<(i64, i64), ch
     result
 }
 
-fn enhance(curr_points: &HashMap<(i64, i64), char>, algo: &[char]) -> HashMap<(i64, i64), char> {
+fn enhance(
+    curr_points: &HashMap<(i64, i64), char>,
+    algo: &[char],
+    value_at_inf: char,
+) -> (HashMap<(i64, i64), char>, char) {
     // First bubble out to get all locations that might require enhancement
     let expanded_pts = bubble_out(curr_points);
 
@@ -96,17 +104,36 @@ fn enhance(curr_points: &HashMap<(i64, i64), char>, algo: &[char]) -> HashMap<(i
 
     // For each point in `expanded_pts`, get its replacement
     for &this_pixel in expanded_pts.keys() {
-        let idx = get_index(curr_points, this_pixel);
+        let idx = get_index(curr_points, this_pixel, value_at_inf);
         result.insert(this_pixel, algo[idx]);
     }
 
-    result
+    // Figure out if we need to change the value at infinity
+    let val_at_idx_0 = algo[0];
+    let val_at_end = algo[algo.len() - 1];
+    let new_val_at_infinity: char = if val_at_idx_0 == '.' {
+        '.'
+    } else {
+        // If current `value_at_inf` is '.' then '#'
+        if value_at_inf == '.' {
+            '#'
+        } else {
+            // if `val_at_end` is '#' then '#' else '.'
+            if val_at_end == '#' {
+                '#'
+            } else {
+                '.'
+            }
+        }
+    };
+
+    (result, new_val_at_infinity)
 }
 
 fn part1(curr_points: &HashMap<(i64, i64), char>, algo: &[char]) -> usize {
     // Run enhance twice, then count the pixels == '#'
-    let once = enhance(curr_points, algo);
-    let twice = enhance(&once, algo);
+    let (once, new_val_at_infinity) = enhance(curr_points, algo, '.');
+    let (twice, _) = enhance(&once, algo, new_val_at_infinity);
     twice.values().filter(|&&c| c == '#').count()
 }
 
@@ -271,7 +298,8 @@ fn test_enhance() {
         '.', '.', '.', '.', '#', '.', '.', '#',
     ];
 
-    let got = enhance(&image, &algo);
+    let (got, new_val_at_infinity) = enhance(&image, &algo, '.');
+    assert_eq!('.', new_val_at_infinity);
 
     let expected_image = HashMap::from([
         ((-1, -1), '.'),
@@ -342,7 +370,7 @@ fn test_get_index_1() {
         ((2, 2), '#'),
     ]);
 
-    let got = get_index(&image, (0, 0));
+    let got = get_index(&image, (0, 0), '.');
     assert_eq!(26, got);
 }
 
@@ -360,7 +388,7 @@ fn test_get_replacement_2() {
         ((2, 2), '#'),
     ]);
 
-    let got = get_index(&image, (1, 1));
+    let got = get_index(&image, (1, 1), '.');
     assert_eq!(423, got);
 }
 
@@ -378,7 +406,7 @@ fn test_get_replacement_3() {
         ((2, 2), '.'),
     ]);
 
-    let got = get_index(&image, (1, 1));
+    let got = get_index(&image, (1, 1), '.');
     assert_eq!(34, got);
 }
 
