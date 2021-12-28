@@ -22,11 +22,6 @@ fn parse_input(input: &str) -> (usize, usize) {
     (p1_start, p2_start)
 }
 
-/// sum_m_to_n assumes that m <= n, and returns the sum of integers from m to n
-fn sum_m_to_n(m: usize, n: usize) -> usize {
-    (n - m + 1) * (m + n) / 2
-}
-
 fn part1(p1_start: usize, p2_start: usize) -> usize {
     let mut p1_score = 0;
     let mut p2_score = 0;
@@ -44,14 +39,12 @@ fn part1(p1_start: usize, p2_start: usize) -> usize {
 
         // If odd, then it's the first player
         if a % 2 == 1 {
-            // TODO: NEED TO WRAP AROUND 8,9,10,1,2...
             p1_loc = locs[(p1_loc + a + b + c) % 10];
             p1_score += p1_loc;
             if p1_score >= 1_000 {
                 return p2_score * n_die_rolls;
             }
         } else {
-            // TODO: NEED TO WRAP AROUND 8,9,10,1,2...
             p2_loc = locs[(p2_loc + a + b + c) % 10];
             p2_score += p2_loc;
             if p2_score >= 1_000 {
@@ -61,6 +54,20 @@ fn part1(p1_start: usize, p2_start: usize) -> usize {
     }
 
     unreachable!()
+}
+
+fn part2(p1_start: usize, p2_start: usize) -> usize {
+    // It looks like at each step, the number of possibilities increases by 2
+    // The pattern looks like
+    // 1
+    // 2,3,4
+    // 3:1, 4:2, 5:3, 6:2, 7:1
+    // 4:1, 5:3, 6:6, 7:7, 8:6, 9:3, 10:1
+    // 5:1, 6:4, 7:9, 8:16, 9:19, 10:16, 11:9, 12:4, 13:1
+    // The number of items produced at each stage, n, (initial stage is 0) is 3^n,
+
+    
+    0
 }
 
 fn main() {
@@ -108,4 +115,10 @@ fn test_part1_actual() {
     let (p1_start, p2_start) = parse_input(&input_str);
     let got = part1(p1_start, p2_start);
     assert_eq!(900099, got);
+}
+
+#[test]
+fn test_part2() {
+    let got = part2(4, 8);
+    assert_eq!(444356092776315, got);
 }
