@@ -1,6 +1,6 @@
-![](https://img.shields.io/badge/day%20📅-21-blue)
-![](https://img.shields.io/badge/stars%20⭐-28-yellow)
-![](https://img.shields.io/badge/days%20completed-14-red)
+![](https://img.shields.io/badge/day%20📅-25-blue)
+![](https://img.shields.io/badge/stars%20⭐-31-yellow)
+![](https://img.shields.io/badge/days%20completed-15-red)
 
 # aoc_2021_rs
 Advent of Code 2021 in Rust
