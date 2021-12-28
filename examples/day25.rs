@@ -100,14 +100,8 @@ fn main() {
     let part1_result = part1(arr.view());
     println!("Part 1 took {:.6} ms", part1_time.elapsed().as_millis());
 
-    // Part 2
-    // let part2_time = std::time::Instant::now();
-    // let part2_result = solve(&input_image, &algo, 50);
-    // println!("Part 2 took {:.6} ms", part2_time.elapsed().as_millis());
-
     println!();
     println!("Part 1 result: {}", part1_result);
-    // println!("Part 2 result: {}", part2_result);
 }
 
 #[test]
@@ -227,6 +221,16 @@ fn test_part1() {
         [0, 0, 0, 0, 2, 0, 0, 2, 0, 1],
     ]);
     let expected = 58;
+    let got = part1(arr.view());
+    assert_eq!(expected, got);
+}
+
+#[test]
+fn test_part1_actual() {
+    let input_str =
+        std::fs::read_to_string("input/day25.txt").expect("Failed to read day 25 input");
+    let arr = parse_input(&input_str);
+    let expected = 482;
     let got = part1(arr.view());
     assert_eq!(expected, got);
 }
