@@ -77,3 +77,10 @@ test = true
 name = "day20"
 test = true
 
+[[example]]
+name = "day24"
+test = true
+
+[[example]]
+name = "day25"
+test = true
