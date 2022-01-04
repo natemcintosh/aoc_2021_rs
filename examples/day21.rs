@@ -56,6 +56,22 @@ fn part1(p1_start: usize, p2_start: usize) -> usize {
     unreachable!()
 }
 
+fn add_three(count: &[usize]) -> Vec<usize> {
+    // count is a slice where the "key" is the index, and the "value" is the number
+    // of times that key appears
+    // This means there will be some numbers near the start with a count of 0, and that's
+    // fine
+
+    let mut result = vec![0; count.len() + 3];
+    for (item, count) in count.iter().enumerate() {
+        result[item + 1] += count;
+        result[item + 2] += count;
+        result[item + 3] += count;
+    }
+
+    result
+}
+
 fn part2(p1_start: usize, p2_start: usize) -> usize {
     // It looks like at each step, the number of possibilities increases by 2
     // The pattern looks like
@@ -66,8 +82,68 @@ fn part2(p1_start: usize, p2_start: usize) -> usize {
     // 5:1, 6:4, 7:9, 8:16, 9:19, 10:16, 11:9, 12:4, 13:1
     // The number of items produced at each stage, n, (initial stage is 0) is 3^n,
 
-    
-    0
+    let mut p1_games_won = 0;
+    let mut p2_games_won = 0;
+
+    let locs = [10, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+    // Put the starting positions in vectors
+    let mut p1_positions = vec![0; p1_start + 1];
+    p1_positions[p1_start] = 1;
+    let mut p2_positions = vec![0; p2_start + 1];
+    p2_positions[p2_start] = 1;
+
+    loop {
+        // Player 1 rolls the dice three times
+        p1_positions = add_three(&p1_positions);
+        p1_positions = add_three(&p1_positions);
+        p1_positions = add_three(&p1_positions);
+
+        // Get all of the positions into the 1..=10 range
+        // Anything at index 11 should be at index 1
+        if p1_positions.len() >= 12 {
+            if let Some(cnt) = p1_positions.get(11) {
+                p1_positions[1] += cnt;
+                if let Some(cnt) = p1_positions.get(12) {
+                    p1_positions[2] += cnt;
+                    if let Some(cnt) = p1_positions.get(13) {
+                        p1_positions[3] += cnt;
+                        p1_positions.pop();
+                    }
+                    p1_positions.pop();
+                }
+                p1_positions.pop();
+            }
+        }
+
+        // If player 1 has any counts at index 21, that means they won that many games
+        // Add that to their count, and pop that index from the vec
+        while p1_positions.len() >= 22 {
+            p1_games_won += p1_positions
+                .pop()
+                .expect("Could not pop player 1 items at index 21");
+        }
+
+        // Player 2 rolls the dice three times
+        p2_positions = add_three(&p2_positions);
+        p2_positions = add_three(&p2_positions);
+        p2_positions = add_three(&p2_positions);
+
+        // If player 2 has any counts at index 21, that means they won that many games
+        // Add that to their count, and pop that index from the vec
+        while p2_positions.len() >= 22 {
+            p2_games_won += p2_positions
+                .pop()
+                .expect("Could not pop player 1 items at index 21");
+        }
+
+        // If both have all zeros, all games are over
+        if p1_positions.iter().all(|x| *x == 0) && p2_positions.iter().all(|x| *x == 0) {
+            break;
+        }
+    }
+
+    p1_games_won.max(p2_games_won)
 }
 
 fn main() {
@@ -85,7 +161,7 @@ fn main() {
 
     // Part 2
     // let part2_time = std::time::Instant::now();
-    // let part2_result = solve(&input_image, &algo, 50);
+    // let part2_result = part2(p1_start, p2_start);
     // println!("Part 2 took {:.6} ms", part2_time.elapsed().as_millis());
 
     println!();
@@ -115,6 +191,29 @@ fn test_part1_actual() {
     let (p1_start, p2_start) = parse_input(&input_str);
     let got = part1(p1_start, p2_start);
     assert_eq!(900099, got);
+}
+
+#[test]
+fn test_add_three_1() {
+    // This represents 0:1, 1:2, 2:3
+    let input = [1, 2, 3];
+    let got = add_three(&input);
+    // Expect to get 1,2,3,2,2,3,3,4,4,3,3,3,4,4,4,5,5,5
+    // So a counter would hold {1: 1, 2: 3, 3: 6, 4: 5, 5: 3}
+    let expected = vec![0, 1, 3, 6, 5, 3];
+    assert_eq!(expected, got);
+}
+
+#[test]
+fn test_add_three_2() {
+    // Input is
+    // 3:1, 4:2, 5:3, 6:2, 7:1
+    let input = [0, 0, 0, 1, 2, 3, 2, 1];
+    let got = add_three(&input);
+    // Output should be
+    // 4:1, 5:3, 6:6, 7:7, 8:6, 9:3, 10:1
+    let expected = vec![0, 0, 0, 0, 1, 3, 6, 7, 6, 3, 1];
+    assert_eq!(expected, got);
 }
 
 #[test]
