@@ -72,79 +72,201 @@ fn add_three(count: &[usize]) -> Vec<usize> {
     result
 }
 
+/// Returns an array representing the board, where the index repesents a spot on the
+/// board (1-10). Note that this array has a spot at 0, which should hold 0. The value
+/// at each index represents the number pawns at that location
+fn roll_dirac_dice_thre_times(start: usize) -> [usize; 11] {
+    const LOCS: [usize; 10] = [10, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+    // After rolling dirac dice three times, we would add the following to the start
+    const TO_ADD: [usize; 27] = [
+        3, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 8, 8, 8, 9,
+    ];
+
+    // Count up the results
+    let mut result = [0_usize; 11];
+
+    TO_ADD
+        .iter()
+        // Add start to everything in `TO_ADD`
+        .map(|f| f + start)
+        // Get the correct board location using locs
+        .map(|f| LOCS[f % 10])
+        // Add 1 to that location on the board
+        .for_each(|f| result[f] += 1);
+
+    result
+}
+
 fn part2(p1_start: usize, p2_start: usize) -> usize {
-    // It looks like at each step, the number of possibilities increases by 2
-    // The pattern looks like
-    // 1
-    // 2,3,4
-    // 3:1, 4:2, 5:3, 6:2, 7:1
-    // 4:1, 5:3, 6:6, 7:7, 8:6, 9:3, 10:1
-    // 5:1, 6:4, 7:9, 8:16, 9:19, 10:16, 11:9, 12:4, 13:1
-    // The number of items produced at each stage, n, (initial stage is 0) is 3^n,
+    // The idea here is to have an array representing the board, where index 0 is board
+    // position 1, index 1 is board position 2, etc.
+    // Each item in the array is an array representing the score from 0 to 21
+    // (inclusive), and the value at each index tells us how many "players" are at that
+    // spot on the board, and have
+    // that score
+    let mut p1_old: [[usize; 22]; 10] = [[0; 22]; 10];
+    let mut p2_old: [[usize; 22]; 10] = [[0; 22]; 10];
+    let mut p1_new: [[usize; 22]; 10] = [[0; 22]; 10];
+    let mut p2_new: [[usize; 22]; 10] = [[0; 22]; 10];
 
-    let mut p1_games_won = 0;
-    let mut p2_games_won = 0;
+    // Add the players to the correct positions. They have starting scores of 0
+    p1_old[p1_start][0] = 1;
+    p2_old[p2_start][0] = 1;
 
-    let locs = [10, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    // To keep track of games won
+    let mut p1_games_won: usize = 0;
+    let mut p2_games_won: usize = 0;
 
-    // Put the starting positions in vectors
-    let mut p1_positions = vec![0; p1_start + 1];
-    p1_positions[p1_start] = 1;
-    let mut p2_positions = vec![0; p2_start + 1];
-    p2_positions[p2_start] = 1;
+    // Compute the ending positions for each of the ten board positions
+    let positions_after_rolling: [[usize; 11]; 10] = [
+        roll_dirac_dice_thre_times(1),
+        roll_dirac_dice_thre_times(2),
+        roll_dirac_dice_thre_times(3),
+        roll_dirac_dice_thre_times(4),
+        roll_dirac_dice_thre_times(5),
+        roll_dirac_dice_thre_times(6),
+        roll_dirac_dice_thre_times(7),
+        roll_dirac_dice_thre_times(8),
+        roll_dirac_dice_thre_times(9),
+        roll_dirac_dice_thre_times(10),
+    ];
 
+    let mut idx: usize = 0;
+
+    // Begin playing the game
     loop {
-        // Player 1 rolls the dice three times
-        p1_positions = add_three(&p1_positions);
-        p1_positions = add_three(&p1_positions);
-        p1_positions = add_three(&p1_positions);
+        // Check if all the pawns have finished
 
-        // Get all of the positions into the 1..=10 range
-        // Anything at index 11 should be at index 1
-        if p1_positions.len() >= 12 {
-            if let Some(cnt) = p1_positions.get(11) {
-                p1_positions[1] += cnt;
-                if let Some(cnt) = p1_positions.get(12) {
-                    p1_positions[2] += cnt;
-                    if let Some(cnt) = p1_positions.get(13) {
-                        p1_positions[3] += cnt;
-                        p1_positions.pop();
+        // Player 1
+        for (board_pos, scores_at_pos) in p1_old.iter().enumerate() {
+            // For each player 1 position, get the positions after rolling
+            let new_positions = positions_after_rolling[board_pos];
+            
+            // For each new position
+            for new_pos in new_positions {
+                // Need to move pawns from `board_pos` to `new_pos`, and add `new_pos` 
+                // to the score at `new_pos` for each old score as `board_pos`
+                for (old_score, n_items) in scores_at_pos.iter().enumerate() {
+                    let new_score = old_score + new_pos;
+                    if new_score >= 21 {
+                        p1_games_won += n_items
+                    } else {
+                        p1_new[new_pos][new_score] += n_items;
                     }
-                    p1_positions.pop();
                 }
-                p1_positions.pop();
             }
         }
 
-        // If player 1 has any counts at index 21, that means they won that many games
-        // Add that to their count, and pop that index from the vec
-        while p1_positions.len() >= 22 {
-            p1_games_won += p1_positions
-                .pop()
-                .expect("Could not pop player 1 items at index 21");
+        // Player 2
+        for (board_pos, scores_at_pos) in p2_old.iter().enumerate() {
+            // For each player 1 position, get the positions after rolling
+            let new_positions = positions_after_rolling[board_pos];
+            
+            // For each new position
+            for new_pos in new_positions {
+                // Need to move pawns from `board_pos` to `new_pos`, and add `new_pos` 
+                // to the score at `new_pos` for each old score as `board_pos`
+                for (old_score, n_items) in scores_at_pos.iter().enumerate() {
+                    let new_score = old_score + new_pos;
+                    if new_score >= 21 {
+                        p2_games_won += n_items
+                    } else {
+                        p2_new[new_pos][new_score] += n_items;
+                    }
+                }
+            }
         }
 
-        // Player 2 rolls the dice three times
-        p2_positions = add_three(&p2_positions);
-        p2_positions = add_three(&p2_positions);
-        p2_positions = add_three(&p2_positions);
+        // Finally copy new into old. Don't have to clone bc array impls Copy trait,
+        // so they are copied instead of moved.
+        p1_old = p1_new;
+        p2_old = p2_new;
+        // Clean out the new arrays
+        p1_new = [[0; 22]; 10];
+        p2_new = [[0; 22]; 10];
 
-        // If player 2 has any counts at index 21, that means they won that many games
-        // Add that to their count, and pop that index from the vec
-        while p2_positions.len() >= 22 {
-            p2_games_won += p2_positions
-                .pop()
-                .expect("Could not pop player 1 items at index 21");
-        }
-
-        // If both have all zeros, all games are over
-        if p1_positions.iter().all(|x| *x == 0) && p2_positions.iter().all(|x| *x == 0) {
-            break;
+        // Failsafe
+        idx += 1;
+        if idx >= 10_000_000 {
+            return 0;
         }
     }
 
-    p1_games_won.max(p2_games_won)
 }
+
+// fn part2(p1_start: usize, p2_start: usize) -> usize {
+//     // It looks like at each step, the number of possibilities increases by 2
+//     // The pattern looks like
+//     // 1
+//     // 2,3,4
+//     // 3:1, 4:2, 5:3, 6:2, 7:1
+//     // 4:1, 5:3, 6:6, 7:7, 8:6, 9:3, 10:1
+//     // 5:1, 6:4, 7:9, 8:16, 9:19, 10:16, 11:9, 12:4, 13:1
+//     // The number of items produced at each stage, n, (initial stage is 0) is 3^n,
+
+//     let mut p1_games_won = 0;
+//     let mut p2_games_won = 0;
+
+//     // Put the starting positions in vectors
+//     let mut p1_positions = vec![0; p1_start + 1];
+//     p1_positions[p1_start] = 1;
+//     let mut p2_positions = vec![0; p2_start + 1];
+//     p2_positions[p2_start] = 1;
+
+//     loop {
+//         // Player 1 rolls the dice three times
+//         p1_positions = add_three(&p1_positions);
+//         p1_positions = add_three(&p1_positions);
+//         p1_positions = add_three(&p1_positions);
+
+//         // Get all of the positions into the 1..=10 range
+//         // Anything at index 11 should be at index 1
+//         if p1_positions.len() >= 12 {
+//             let cnt = p1_positions[11];
+//             p1_positions[1] += cnt;
+//             if p1_positions.len() >= 13 {
+//                 let cnt = p1_positions[12];
+//                 p1_positions[2] += cnt;
+//                 if p1_positions.len() >= 14 {
+//                     let cnt = p1_positions[13];
+//                     p1_positions[3] += cnt;
+//                     p1_positions.pop();
+//                 }
+//                 p1_positions.pop();
+//             }
+//             p1_positions.pop();
+//         }
+
+//         // If player 1 has any counts at index 21, that means they won that many games
+//         // Add that to their count, and pop that index from the vec
+//         while p1_positions.len() >= 22 {
+//             p1_games_won += p1_positions
+//                 .pop()
+//                 .expect("Could not pop player 1 items at index 21");
+//         }
+
+//         // Player 2 rolls the dice three times
+//         p2_positions = add_three(&p2_positions);
+//         p2_positions = add_three(&p2_positions);
+//         p2_positions = add_three(&p2_positions);
+
+//         // If player 2 has any counts at index 21, that means they won that many games
+//         // Add that to their count, and pop that index from the vec
+//         while p2_positions.len() >= 22 {
+//             p2_games_won += p2_positions
+//                 .pop()
+//                 .expect("Could not pop player 1 items at index 21");
+//         }
+
+//         // If both have all zeros, all games are over
+//         if p1_positions.iter().all(|x| *x == 0) && p2_positions.iter().all(|x| *x == 0) {
+//             break;
+//         }
+//     }
+
+//     p1_games_won.max(p2_games_won)
+// }
 
 fn main() {
     let setup_time = std::time::Instant::now();
@@ -217,7 +339,26 @@ fn test_add_three_2() {
 }
 
 #[test]
-fn test_part2() {
-    let got = part2(4, 8);
-    assert_eq!(444356092776315, got);
+fn test_roll_dirac_dice_1() {
+    let start = 1;
+    let got = roll_dirac_dice_thre_times(start);
+    // index                    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    let expected: [usize; 11] = [0, 0, 0, 0, 1, 3, 6, 7, 6, 3, 1];
+    assert_eq!(expected, got);
 }
+
+#[test]
+fn test_roll_dirac_dice_2() {
+    let start = 5;
+    let got = roll_dirac_dice_thre_times(start);
+
+    // index                    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    let expected: [usize; 11] = [0, 7, 6, 3, 1, 0, 0, 0, 1, 3, 6];
+    assert_eq!(expected, got);
+}
+
+// #[test]
+// fn test_part2() {
+// let got = part2(4, 8);
+//     assert_eq!(444356092776315, got);
+// }
