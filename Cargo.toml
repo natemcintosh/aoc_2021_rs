@@ -54,11 +54,19 @@ name = "day11"
 test = true
 
 [[example]]
+name = "day12"
+test = true
+
+[[example]]
 name = "day13"
 test = true
 
 [[example]]
 name = "day14"
+test = true
+
+[[example]]
+name = "day15"
 test = true
 
 [[example]]
