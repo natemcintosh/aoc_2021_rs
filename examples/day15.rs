@@ -65,22 +65,8 @@ impl PartialOrd for State {
     }
 }
 
-/// Carry out fairly standard uniform cost search for an array. Return path from `start` to `goal`
-///
-/// Basic pseudo-code is
-/// place initial state on frontier
-/// initialize explored list
-/// while frontier is not empty {
-///     current-state := best state on frontier
-///     return path( current-state) if is-terminal( current-state)
-///     if cost(current-state) > costs[current-state] { continue }
-///     for each n in neighbors {
-///         calculate cost of getting to this node
-///         if this cost is less than already seen, update costs and add to frontier
-///     }
-/// }
-/// return nil
-/// And use a min-heap for the frontier (using a stack would make it depth first search)
+/// Not entirely sure, might actually be Dijkstra's.
+/// Based on [this](https://doc.rust-lang.org/std/collections/binary_heap/index.html#examples)
 fn uniform_cost_search(
     arr: ArrayView2<u8>,
     start: (usize, usize),
