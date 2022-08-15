@@ -98,7 +98,7 @@ fn uniform_cost_search(
 
         for nbr in get_neighbors(arr, pos.0, pos.1) {
             let new = State {
-                cost: cost + usize::from(arr[pos]),
+                cost: cost + usize::from(arr[nbr]),
                 position: nbr,
             };
 
