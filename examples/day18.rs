@@ -6,20 +6,19 @@ enum SingleSfn {
     Another(Box<Sfn>),
 }
 
+// struct Sfn(SingleSfn, SingleSfn);
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct Sfn(SingleSfn, SingleSfn);
-// struct Sfn {
-//     left: SingleSfn,
-//     right: SingleSfn,
-//     depth: usize,
-// }
+struct Sfn {
+    left: SingleSfn,
+    right: SingleSfn,
+    depth: usize,
+}
 
-fn parse_stream<T: Iterator<Item = char>>(so_far: Option<Sfn>, char_stream: &mut T) -> Option<Sfn> {
-    // assert!(
-    //     !letters.next().expect("Nothing in this string").ne(&'['),
-    //     "Snail fish number did not start with '['"
-    // );
-
+fn parse_stream<T: Iterator<Item = char>>(
+    so_far: Option<Sfn>,
+    char_stream: &mut T,
+    depth: usize,
+) -> Option<Sfn> {
     // Get the next character and decide what to do
     let nc = char_stream.next().expect("No character to peek at");
     let mut possible_left_1: Option<SingleSfn> = None;
@@ -32,7 +31,7 @@ fn parse_stream<T: Iterator<Item = char>>(so_far: Option<Sfn>, char_stream: &mut
                 .unwrap(),
         ));
     } else if nc.eq(&'[') {
-        possible_left_2 = parse_stream(so_far.clone(), char_stream);
+        possible_left_2 = parse_stream(so_far.clone(), char_stream, depth + 1);
     } else {
         panic!("Next character was not '[' or a number");
     }
@@ -59,9 +58,8 @@ fn parse_stream<T: Iterator<Item = char>>(so_far: Option<Sfn>, char_stream: &mut
                 .unwrap(),
         ));
     } else if nc.eq(&'[') {
-        possible_right_2 = parse_stream(so_far, char_stream);
+        possible_right_2 = parse_stream(so_far, char_stream, depth + 1);
     } else {
-        dbg!(nc);
         panic!("Next character was not '[' or a number");
     }
 
@@ -73,7 +71,7 @@ fn parse_stream<T: Iterator<Item = char>>(so_far: Option<Sfn>, char_stream: &mut
         panic!("Foiled again")
     };
 
-    let sfn = Some(Sfn(left, right));
+    let sfn = Some(Sfn { left, right, depth });
 
     // Consume the ']' character
     char_stream.next();
@@ -86,7 +84,7 @@ impl From<&str> for Sfn {
         let mut char_stream = s.chars();
         // Advance it and consume the first '[' character
         char_stream.next();
-        let sfn = parse_stream(None, &mut char_stream);
+        let sfn = parse_stream(None, &mut char_stream, 0);
         sfn.expect("Did not successfully parse snail fish number")
     }
 }
@@ -94,12 +92,12 @@ impl From<&str> for Sfn {
 impl Display for Sfn {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "[")?;
-        match self.0 {
+        match self.left {
             SingleSfn::Number(n) => write!(f, "{}", n)?,
             SingleSfn::Another(ref sfn) => sfn.fmt(f)?,
         }
         write!(f, ",")?;
-        match self.1 {
+        match self.right {
             SingleSfn::Number(n) => write!(f, "{}", n)?,
             SingleSfn::Another(ref sfn) => sfn.fmt(f)?,
         }
@@ -142,7 +140,11 @@ mod tests {
     #[test]
     fn test_construct_sfn_from_1() {
         let s = "[1,2]";
-        let want = Sfn(SingleSfn::Number(1), SingleSfn::Number(2));
+        let want = Sfn {
+            left: SingleSfn::Number(1),
+            right: SingleSfn::Number(2),
+            depth: 0,
+        };
         let got = Sfn::from(s);
         assert_eq!(want, got);
     }
@@ -150,10 +152,15 @@ mod tests {
     #[test]
     fn test_construct_sfn_from_2() {
         let s = "[[1,2],3]";
-        let want = Sfn(
-            SingleSfn::Another(Box::new(Sfn(SingleSfn::Number(1), SingleSfn::Number(2)))),
-            SingleSfn::Number(3),
-        );
+        let want = Sfn {
+            left: SingleSfn::Another(Box::new(Sfn {
+                left: SingleSfn::Number(1),
+                right: SingleSfn::Number(2),
+                depth: 1,
+            })),
+            right: SingleSfn::Number(3),
+            depth: 0,
+        };
         let got = Sfn::from(s);
         assert_eq!(want, got);
     }
@@ -161,10 +168,15 @@ mod tests {
     #[test]
     fn test_construct_sfn_from_3() {
         let s = "[9,[8,7]]";
-        let want = Sfn(
-            SingleSfn::Number(9),
-            SingleSfn::Another(Box::new(Sfn(SingleSfn::Number(8), SingleSfn::Number(7)))),
-        );
+        let want = Sfn {
+            left: SingleSfn::Number(9),
+            right: SingleSfn::Another(Box::new(Sfn {
+                left: SingleSfn::Number(8),
+                right: SingleSfn::Number(7),
+                depth: 1,
+            })),
+            depth: 0,
+        };
         let got = Sfn::from(s);
         assert_eq!(want, got);
     }
@@ -172,10 +184,19 @@ mod tests {
     #[test]
     fn test_construct_sfn_from_4() {
         let s = "[[1,9],[8,5]]";
-        let want = Sfn(
-            SingleSfn::Another(Box::new(Sfn(SingleSfn::Number(1), SingleSfn::Number(9)))),
-            SingleSfn::Another(Box::new(Sfn(SingleSfn::Number(8), SingleSfn::Number(5)))),
-        );
+        let want = Sfn {
+            left: SingleSfn::Another(Box::new(Sfn {
+                left: SingleSfn::Number(1),
+                right: SingleSfn::Number(9),
+                depth: 1,
+            })),
+            right: SingleSfn::Another(Box::new(Sfn {
+                left: SingleSfn::Number(8),
+                right: SingleSfn::Number(5),
+                depth: 1,
+            })),
+            depth: 0,
+        };
         let got = Sfn::from(s);
         assert_eq!(want, got);
     }
@@ -183,23 +204,46 @@ mod tests {
     #[test]
     fn test_construct_sfn_from_5() {
         let s = "[[[[1,2],[3,4]],[[5,6],[7,8]]],9]";
-        let p1 = Sfn(SingleSfn::Number(1), SingleSfn::Number(2));
-        let p2 = Sfn(SingleSfn::Number(3), SingleSfn::Number(4));
-        let p3 = Sfn(SingleSfn::Number(5), SingleSfn::Number(6));
-        let p4 = Sfn(SingleSfn::Number(7), SingleSfn::Number(8));
-        let double1 = Sfn(
-            SingleSfn::Another(Box::new(p1)),
-            SingleSfn::Another(Box::new(p2)),
-        );
-        let double2 = Sfn(
-            SingleSfn::Another(Box::new(p3)),
-            SingleSfn::Another(Box::new(p4)),
-        );
-        let double3 = Sfn(
-            SingleSfn::Another(Box::new(double1)),
-            SingleSfn::Another(Box::new(double2)),
-        );
-        let want = Sfn(SingleSfn::Another(Box::new(double3)), SingleSfn::Number(9));
+        let p1 = Sfn {
+            left: SingleSfn::Number(1),
+            right: SingleSfn::Number(2),
+            depth: 3,
+        };
+        let p2 = Sfn {
+            left: SingleSfn::Number(3),
+            right: SingleSfn::Number(4),
+            depth: 3,
+        };
+        let p3 = Sfn {
+            left: SingleSfn::Number(5),
+            right: SingleSfn::Number(6),
+            depth: 3,
+        };
+        let p4 = Sfn {
+            left: SingleSfn::Number(7),
+            right: SingleSfn::Number(8),
+            depth: 3,
+        };
+        let double1 = Sfn {
+            left: SingleSfn::Another(Box::new(p1)),
+            right: SingleSfn::Another(Box::new(p2)),
+            depth: 2,
+        };
+        let double2 = Sfn {
+            left: SingleSfn::Another(Box::new(p3)),
+            right: SingleSfn::Another(Box::new(p4)),
+            depth: 2,
+        };
+        let double3 = Sfn {
+            left: SingleSfn::Another(Box::new(double1)),
+            right: SingleSfn::Another(Box::new(double2)),
+            depth: 1,
+        };
+        let want = Sfn {
+            left: SingleSfn::Another(Box::new(double3)),
+            right: SingleSfn::Number(9),
+            depth: 0,
+        };
 
         let got = Sfn::from(s);
         assert_eq!(want, got);
@@ -341,4 +385,44 @@ mod tests {
             assert_eq!(s.to_owned(), got);
         }
     }
+
+    // #[test]
+    // fn test_explode_1() {
+    //     let sfn = Sfn::from("[[[[[9,8],1],2],3],4]");
+    //     let want = Sfn::from("[[[[0,9],2],3],4]");
+    //     let got = sfn.explode();
+    //     assert_eq!(want, got);
+    // }
+
+    // #[test]
+    // fn test_explode_2() {
+    //     let sfn = Sfn::from("[7,[6,[5,[4,[3,2]]]]]");
+    //     let want = Sfn::from("[7,[6,[5,[7,0]]]]");
+    //     let got = sfn.explode();
+    //     assert_eq!(want, got);
+    // }
+
+    // #[test]
+    // fn test_explode_3() {
+    //     let sfn = Sfn::from("[[6,[5,[4,[3,2]]]],1]");
+    //     let want = Sfn::from("[[6,[5,[7,0]]],3]");
+    //     let got = sfn.explode();
+    //     assert_eq!(want, got);
+    // }
+
+    // #[test]
+    // fn test_explode_4() {
+    //     let sfn = Sfn::from("[[3,[2,[1,[7,3]]]],[6,[5,[4,[3,2]]]]]");
+    //     let want = Sfn::from("[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]");
+    //     let got = sfn.explode();
+    //     assert_eq!(want, got);
+    // }
+
+    // #[test]
+    // fn test_explode_5() {
+    //     let sfn = Sfn::from("[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]");
+    //     let want = Sfn::from("[[3,[2,[8,0]]],[9,[5,[7,0]]]]");
+    //     let got = sfn.explode();
+    //     assert_eq!(want, got);
+    // }
 }
